@@ -1,0 +1,28 @@
+# Compilación
+bin/
+obj/
+out/
+publish/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# Pruebas y cobertura
+TestResults/
+coverage/
+*.coverage
+coverage.cobertura.xml
+
+# Secretos y configuración local (nunca subir cadenas de conexión reales)
+appsettings.Local.json
+*.pfx
+.env
+
+# Sistema
+Thumbs.db
+.DS_Store
