@@ -60,12 +60,25 @@ Nunca subir cadenas de conexión reales al repositorio.
 - Commits convencionales, en español: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`.
 - No hacer merge de un Pull Request sin que Eduardo lo revise.
 
+## Entorno de trabajo
+
+Eduardo usa Claude Code en un **servidor Ubuntu**, no en Windows. Consecuencias:
+
+- Domain, Data, Services y las pruebas se compilan y se ejecutan en el servidor.
+- WPF **no se puede ejecutar** en Linux. La UI se verifica de dos formas: GitHub Actions la
+  compila en Windows en cada Pull Request, y un integrante la ejecuta en una PC con Windows.
+- Para compilar la solución completa en Linux hay que probar `-p:EnableWindowsTargeting=true`;
+  si no funciona, compilar y probar solo `tests/SGBU.Tests`.
+- SQL Server 2022 corre en Ubuntu (Docker, imagen `mcr.microsoft.com/mssql/server:2022-latest`,
+  necesita al menos 2 GB de RAM). Sirve para probar scripts y para las pruebas de integración.
+- El instalador MSI o ClickOnce y la demostración final requieren Windows.
+
 ## Comandos
 
-```powershell
-dotnet build
-dotnet test
-dotnet run --project src/SGBU.UI
+```bash
+dotnet test tests/SGBU.Tests          # funciona en Ubuntu
+dotnet build SGBU.slnx                # solución completa (Windows o CI)
+dotnet run --project src/SGBU.UI      # solo en Windows
 ```
 
 ## Plan y avance
