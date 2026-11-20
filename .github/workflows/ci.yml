@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-y-pruebas:
+    name: Compilar y probar (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restaurar paquetes
+        run: dotnet restore SGBU.slnx
+
+      - name: Compilar
+        run: dotnet build SGBU.slnx --configuration Release --no-restore
+
+      - name: Ejecutar pruebas con cobertura
+        run: dotnet test SGBU.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"

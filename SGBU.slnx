@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SGBU.Domain/SGBU.Domain.csproj" />
+    <Project Path="src/SGBU.Data/SGBU.Data.csproj" />
+    <Project Path="src/SGBU.Services/SGBU.Services.csproj" />
+    <Project Path="src/SGBU.UI/SGBU.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SGBU.Tests/SGBU.Tests.csproj" />
+  </Folder>
+</Solution>

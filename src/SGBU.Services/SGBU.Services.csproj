@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Services: casos de uso. Solo conoce Domain (nunca Data ni UI). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SGBU.Domain\SGBU.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

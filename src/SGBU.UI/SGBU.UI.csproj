@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- UI: aplicación WPF con MVVM. Es la única capa que une todas las demás. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SGBU.Domain\SGBU.Domain.csproj" />
+    <ProjectReference Include="..\SGBU.Services\SGBU.Services.csproj" />
+    <ProjectReference Include="..\SGBU.Data\SGBU.Data.csproj" />
+  </ItemGroup>
+
+</Project>
