@@ -35,6 +35,16 @@ public class RepositorioUsuariosTests
     }
 
     [FactConBase]
+    public async Task ListarRoles_DevuelveLosTres()
+    {
+        await using var uow = await BaseDeDatos.AbrirAsync();
+
+        var roles = await uow.Usuarios.ListarRolesAsync();
+
+        Assert.Equal(new[] { "Administrador", "Estudiante", "Profesor" }, roles.Select(r => r.Nombre));
+    }
+
+    [FactConBase]
     public async Task Buscar_PorNombreConPaginacion()
     {
         await using var uow = await BaseDeDatos.AbrirAsync();

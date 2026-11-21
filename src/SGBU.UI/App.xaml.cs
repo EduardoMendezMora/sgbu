@@ -1,7 +1,9 @@
 using System.Windows;
 using Microsoft.Extensions.Configuration;
 using SGBU.Data;
+using SGBU.Services.Catalogo;
 using SGBU.Services.Seguridad;
+using SGBU.Services.Usuarios;
 using SGBU.UI.Navegacion;
 
 namespace SGBU.UI;
@@ -29,9 +31,12 @@ public partial class App : Application
 
         // Aquí se crean los objetos y se le pasa a cada uno lo que necesita.
         FabricaUnidadDeTrabajoSql fabrica = new FabricaUnidadDeTrabajoSql(cadena);
-        ServicioAutenticacion autenticacion = new ServicioAutenticacion(fabrica, new HasherBCrypt());
+        HasherBCrypt hasher = new HasherBCrypt();
+        ServicioAutenticacion autenticacion = new ServicioAutenticacion(fabrica, hasher);
+        ServicioCatalogo catalogo = new ServicioCatalogo(fabrica);
+        ServicioUsuarios usuarios = new ServicioUsuarios(fabrica, hasher);
 
-        ServicioVentanas ventanas = new ServicioVentanas(autenticacion);
+        ServicioVentanas ventanas = new ServicioVentanas(autenticacion, catalogo, usuarios);
         ventanas.MostrarLogin();
     }
 }

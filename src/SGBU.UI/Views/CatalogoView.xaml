@@ -1,0 +1,100 @@
+<UserControl x:Class="SGBU.UI.Views.CatalogoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="Visible" />
+  </UserControl.Resources>
+
+  <Grid Margin="10">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Búsqueda -->
+    <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
+      <Label Content="Buscar:" />
+      <TextBox Text="{Binding TextoBuscar}" Width="220" />
+      <Label Content="Tipo:" Margin="10,0,0,0" />
+      <ComboBox ItemsSource="{Binding TiposBuscar}" SelectedItem="{Binding TipoBuscar}" Width="90" />
+      <Button Content="Buscar" Command="{Binding BuscarCommand}" Margin="10,0,0,0" Padding="10,0" IsDefault="True" />
+    </StackPanel>
+
+    <!-- Tabla de materiales -->
+    <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Materiales}" SelectedItem="{Binding MaterialSeleccionado}"
+              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="ISBN" Binding="{Binding Isbn}" />
+        <DataGridTextColumn Header="Título" Binding="{Binding Titulo}" Width="*" />
+        <DataGridTextColumn Header="Autor" Binding="{Binding Autor}" Width="*" />
+        <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" />
+        <DataGridTextColumn Header="Disponibles" Binding="{Binding StockDisponible}" />
+        <DataGridTextColumn Header="Total" Binding="{Binding StockTotal}" />
+      </DataGrid.Columns>
+    </DataGrid>
+
+    <!-- Paginación -->
+    <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,8,0,0">
+      <Button Content="&lt; Anterior" Command="{Binding AnteriorCommand}" Padding="8,2" />
+      <TextBlock Text="{Binding InfoPagina}" Margin="10,0" VerticalAlignment="Center" />
+      <Button Content="Siguiente &gt;" Command="{Binding SiguienteCommand}" Padding="8,2" />
+    </StackPanel>
+
+    <!-- Formulario (solo administrador) -->
+    <GroupBox Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Header="Material" Width="260" Margin="10,0,0,0"
+              Visibility="{Binding PuedeEditar, Converter={StaticResource Visible}}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="5">
+          <Label Content="Tipo:" />
+          <ComboBox ItemsSource="{Binding Tipos}" SelectedItem="{Binding Tipo}" />
+          <Label Content="ISBN:" />
+          <TextBox Text="{Binding Isbn}" />
+          <Label Content="Título:" />
+          <TextBox Text="{Binding Titulo}" />
+          <Label Content="Autor:" />
+          <TextBox Text="{Binding Autor}" />
+          <Label Content="Editorial:" />
+          <TextBox Text="{Binding Editorial}" />
+          <Label Content="Año:" />
+          <TextBox Text="{Binding Anio}" />
+          <Label Content="Categoría:" />
+          <TextBox Text="{Binding Categoria}" />
+          <Label Content="Cantidad de ejemplares:" />
+          <TextBox Text="{Binding StockTotal}" />
+
+          <!-- Campos que cambian según el tipo -->
+          <StackPanel Visibility="{Binding EsLibro, Converter={StaticResource Visible}}">
+            <Label Content="Edición:" />
+            <TextBox Text="{Binding Edicion}" />
+          </StackPanel>
+          <StackPanel Visibility="{Binding EsRevista, Converter={StaticResource Visible}}">
+            <Label Content="Número / volumen:" />
+            <TextBox Text="{Binding NumeroVolumen}" />
+            <Label Content="Periodicidad:" />
+            <TextBox Text="{Binding Periodicidad}" />
+          </StackPanel>
+          <StackPanel Visibility="{Binding EsTesis, Converter={StaticResource Visible}}">
+            <Label Content="Universidad:" />
+            <TextBox Text="{Binding Universidad}" />
+            <Label Content="Grado académico:" />
+            <TextBox Text="{Binding GradoAcademico}" />
+            <Label Content="Tutor:" />
+            <TextBox Text="{Binding Tutor}" />
+          </StackPanel>
+
+          <TextBlock Text="{Binding Mensaje}" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+          <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <Button Content="Nuevo" Command="{Binding NuevoCommand}" Width="80" />
+            <Button Content="Guardar" Command="{Binding GuardarCommand}" Width="80" Margin="10,0,0,0" />
+          </StackPanel>
+        </StackPanel>
+      </ScrollViewer>
+    </GroupBox>
+  </Grid>
+</UserControl>

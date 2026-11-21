@@ -57,6 +57,7 @@ dotnet test tests/SGBU.Data.Tests     # integración contra la base (sin SGBU_CO
 | `src/SGBU.UI` | Aplicación WPF con MVVM. |
 | `tests/SGBU.Tests` | Pruebas unitarias (Domain y Services). |
 | `tests/SGBU.Data.Tests` | Pruebas de integración contra SQL Server. |
+| `tools/SGBU.Capturas` | Toma fotos de las pantallas en GitHub Actions (FlaUI). |
 | `database` | Scripts SQL. |
 | `docs` | Manuales y diagramas. |
 

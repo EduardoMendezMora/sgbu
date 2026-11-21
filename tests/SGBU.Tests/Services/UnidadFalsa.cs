@@ -1,0 +1,45 @@
+using SGBU.Domain.Entidades;
+using SGBU.Domain.Repositorios;
+
+namespace SGBU.Tests.Services;
+
+internal class UnidadFalsa : IUnidadDeTrabajo
+{
+    private readonly FabricaFalsa fabrica;
+    private readonly List<RegistroAuditoria> pendientes = new List<RegistroAuditoria>();
+
+    public UnidadFalsa(FabricaFalsa fabrica)
+    {
+        this.fabrica = fabrica;
+        Usuarios = new UsuariosFalsos(fabrica);
+        Materiales = new MaterialesFalsos(fabrica.Materiales);
+        Auditoria = new AuditoriaFalsa(pendientes);
+    }
+
+    public IRepositorioMateriales Materiales { get; }
+
+    public IRepositorioUsuarios Usuarios { get; }
+
+    public IRepositorioPrestamos Prestamos => throw new NotSupportedException();
+
+    public IRepositorioMultas Multas => throw new NotSupportedException();
+
+    public IRepositorioReservas Reservas => throw new NotSupportedException();
+
+    public IRepositorioAuditoria Auditoria { get; }
+
+    public Task ConfirmarAsync()
+    {
+        fabrica.Auditoria.AddRange(pendientes);
+        fabrica.Confirmaciones++;
+        return Task.CompletedTask;
+    }
+
+    public Task RevertirAsync()
+    {
+        pendientes.Clear();
+        return Task.CompletedTask;
+    }
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}

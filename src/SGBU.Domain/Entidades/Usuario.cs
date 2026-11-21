@@ -70,6 +70,8 @@ public class Usuario
 
     public void Desactivar() => Activo = false;
 
+    public void Activar() => Activo = true;
+
     /// <summary>
     /// Reglas para pedir un préstamo. Los números (cuántos préstamos activos, si hay multas)
     /// los consulta Services en la base y se los pasa aquí: Domain decide, pero no consulta.

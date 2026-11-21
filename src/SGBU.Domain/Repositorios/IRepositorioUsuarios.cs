@@ -13,6 +13,8 @@ public interface IRepositorioUsuarios
 
     Task<Pagina<Usuario>> BuscarAsync(string? texto, int numeroPagina, int tamanoPagina);
 
+    Task<IReadOnlyList<Rol>> ListarRolesAsync();
+
     Task<int> AgregarAsync(Usuario usuario);
 
     Task ActualizarAsync(Usuario usuario);
