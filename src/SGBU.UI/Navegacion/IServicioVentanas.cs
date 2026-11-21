@@ -9,4 +9,7 @@ public interface IServicioVentanas
     void MostrarPrincipal(Sesion sesion);
 
     void CerrarSesion();
+
+    // Abre la ventana "Guardar como". Devuelve null si el usuario cancela.
+    string? PedirRutaParaGuardar(string nombreSugerido, string filtro);
 }

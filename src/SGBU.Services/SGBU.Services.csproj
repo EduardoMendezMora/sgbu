@@ -11,6 +11,10 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="EPPlus" Version="7.5.2" />
+    <PackageReference Include="QuestPDF" Version="2026.9.2" />
+    <!-- EPPlus trae una versión vieja con fallas de seguridad; se fuerza la corregida. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
   </ItemGroup>
 
 </Project>

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using SGBU.Services.Catalogo;
 using SGBU.Services.Multas;
 using SGBU.Services.Prestamos;
+using SGBU.Services.Reportes;
 using SGBU.Services.Seguridad;
 using SGBU.Services.Usuarios;
 using SGBU.UI.Navegacion;
@@ -17,6 +18,7 @@ public partial class PrincipalViewModel : ObservableObject
     private readonly ServicioUsuarios servicioUsuarios;
     private readonly ServicioPrestamos servicioPrestamos;
     private readonly ServicioMultas servicioMultas;
+    private readonly ServicioReportes servicioReportes;
 
     [ObservableProperty]
     private OpcionMenu? opcionSeleccionada;
@@ -26,13 +28,14 @@ public partial class PrincipalViewModel : ObservableObject
     [ObservableProperty]
     private object? vistaActual;
 
-    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios, ServicioPrestamos servicioPrestamos, ServicioMultas servicioMultas)
+    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios, ServicioPrestamos servicioPrestamos, ServicioMultas servicioMultas, ServicioReportes servicioReportes)
     {
         this.ventanas = ventanas;
         this.servicioCatalogo = servicioCatalogo;
         this.servicioUsuarios = servicioUsuarios;
         this.servicioPrestamos = servicioPrestamos;
         this.servicioMultas = servicioMultas;
+        this.servicioReportes = servicioReportes;
         Sesion = sesion;
         Bienvenida = "Bienvenido(a), " + sesion.NombreCompleto;
 
@@ -77,6 +80,10 @@ public partial class PrincipalViewModel : ObservableObject
         else if (value.Permiso == Permiso.GestionarMultas)
         {
             VistaActual = new MultasViewModel(servicioMultas, Sesion);
+        }
+        else if (value.Permiso == Permiso.VerReportes)
+        {
+            VistaActual = new ReportesViewModel(servicioReportes, Sesion, ventanas);
         }
         else if (value.Permiso == Permiso.GestionarUsuarios)
         {

@@ -31,6 +31,8 @@ internal class UnidadFalsa : IUnidadDeTrabajo
 
     public IRepositorioAuditoria Auditoria { get; }
 
+    public IRepositorioReportes Reportes => new ReportesFalsos();
+
     public Task ConfirmarAsync()
     {
         fabrica.Auditoria.AddRange(pendientes);

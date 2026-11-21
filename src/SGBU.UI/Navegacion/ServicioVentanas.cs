@@ -1,7 +1,9 @@
 using System.Windows;
+using Microsoft.Win32;
 using SGBU.Services.Catalogo;
 using SGBU.Services.Multas;
 using SGBU.Services.Prestamos;
+using SGBU.Services.Reportes;
 using SGBU.Services.Seguridad;
 using SGBU.Services.Usuarios;
 using SGBU.UI.ViewModels;
@@ -17,15 +19,17 @@ public class ServicioVentanas : IServicioVentanas
     private readonly ServicioUsuarios usuarios;
     private readonly ServicioPrestamos prestamos;
     private readonly ServicioMultas multas;
+    private readonly ServicioReportes reportes;
     private Window? ventanaActual;
 
-    public ServicioVentanas(ServicioAutenticacion autenticacion, ServicioCatalogo catalogo, ServicioUsuarios usuarios, ServicioPrestamos prestamos, ServicioMultas multas)
+    public ServicioVentanas(ServicioAutenticacion autenticacion, ServicioCatalogo catalogo, ServicioUsuarios usuarios, ServicioPrestamos prestamos, ServicioMultas multas, ServicioReportes reportes)
     {
         this.autenticacion = autenticacion;
         this.catalogo = catalogo;
         this.usuarios = usuarios;
         this.prestamos = prestamos;
         this.multas = multas;
+        this.reportes = reportes;
     }
 
     public void MostrarLogin()
@@ -38,13 +42,27 @@ public class ServicioVentanas : IServicioVentanas
     public void MostrarPrincipal(Sesion sesion)
     {
         PrincipalWindow principal = new PrincipalWindow();
-        principal.DataContext = new PrincipalViewModel(sesion, this, catalogo, usuarios, prestamos, multas);
+        principal.DataContext = new PrincipalViewModel(sesion, this, catalogo, usuarios, prestamos, multas, reportes);
         Cambiar(principal);
     }
 
     public void CerrarSesion()
     {
         MostrarLogin();
+    }
+
+    public string? PedirRutaParaGuardar(string nombreSugerido, string filtro)
+    {
+        SaveFileDialog dialogo = new SaveFileDialog();
+        dialogo.FileName = nombreSugerido;
+        dialogo.Filter = filtro;
+
+        if (dialogo.ShowDialog() == true)
+        {
+            return dialogo.FileName;
+        }
+
+        return null;
     }
 
     // Muestra la ventana nueva y cierra la anterior.
