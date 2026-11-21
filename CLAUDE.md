@@ -86,7 +86,8 @@ dotnet run --project src/SGBU.UI      # solo en Windows
 - [x] 1. Entorno, repositorio, solución con las cuatro capas y CI
 - [ ] 2. Base de datos: tablas, índices y seed. Decisión tomada: una sola tabla `Materiales`
       con columna `Tipo`. Eduardo escribe la tabla `Multas` con guía.
-- [ ] 3. Domain: entidades con herencia, excepciones propias, interfaces de repositorio
+- [x] 3. Domain: entidades con herencia, excepciones propias, interfaces de repositorio
+      (rama `feature/domain`; 90 pruebas, 89 % de cobertura en Domain)
 - [ ] 4. Data: repositorios ADO.NET, Unit of Work, transacciones
 - [ ] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM
 - [ ] 6. Catálogo y Usuarios: CRUD, búsquedas, validaciones, paginación
