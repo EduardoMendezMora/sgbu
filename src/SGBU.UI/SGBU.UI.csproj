@@ -8,6 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- appsettings.json se copia junto al .exe. appsettings.Local.json no se sube a git. -->
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.Local.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('appsettings.Local.json')" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SGBU.Domain\SGBU.Domain.csproj" />
     <ProjectReference Include="..\SGBU.Services\SGBU.Services.csproj" />
     <ProjectReference Include="..\SGBU.Data\SGBU.Data.csproj" />

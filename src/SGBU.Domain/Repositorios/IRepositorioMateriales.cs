@@ -9,13 +9,13 @@ namespace SGBU.Domain.Repositorios;
 /// </summary>
 public interface IRepositorioMateriales
 {
-    Task<Material?> ObtenerPorIdAsync(int id, CancellationToken ct = default);
+    Task<Material?> ObtenerPorIdAsync(int id);
 
-    Task<Material?> ObtenerPorIsbnAsync(string isbn, CancellationToken ct = default);
+    Task<Material?> ObtenerPorIsbnAsync(string isbn);
 
-    Task<Pagina<Material>> BuscarAsync(string? texto, TipoMaterial? tipo, int numeroPagina, int tamanoPagina, CancellationToken ct = default);
+    Task<Pagina<Material>> BuscarAsync(string? texto, TipoMaterial? tipo, int numeroPagina, int tamanoPagina);
 
-    Task<int> AgregarAsync(Material material, CancellationToken ct = default);
+    Task<int> AgregarAsync(Material material);
 
-    Task ActualizarAsync(Material material, CancellationToken ct = default);
+    Task ActualizarAsync(Material material);
 }

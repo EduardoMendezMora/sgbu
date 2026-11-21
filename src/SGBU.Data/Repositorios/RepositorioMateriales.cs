@@ -1,186 +1,236 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
-using SGBU.Data.Infraestructura;
 using SGBU.Domain.Entidades;
+using SGBU.Domain.Excepciones;
 using SGBU.Domain.Reglas;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data.Repositorios;
 
-/// <summary>
-/// Materiales con ADO.NET directo. La tabla es una sola (columna Tipo) y aquí se decide
-/// qué clase de C# crear: Libro, Revista o Tesis. Esa traducción es el "mapeo" que un ORM
-/// haría solo; el enunciado pide hacerlo a mano para entender qué pasa por debajo.
-/// </summary>
-internal sealed class RepositorioMateriales : IRepositorioMateriales
+public class RepositorioMateriales : IRepositorioMateriales
 {
-    private const string Columnas = """
-        Id, Tipo, Isbn, Titulo, Autor, Editorial, AnioPublicacion, Categoria, StockTotal, StockDisponible,
-        Activo, Edicion, NumeroVolumen, Periodicidad, Universidad, GradoAcademico, Tutor
-        """;
+    private readonly SqlConnection conexion;
+    private readonly SqlTransaction transaccion;
 
-    private const string Filtro = """
-        WHERE (@patron IS NULL OR Titulo LIKE @patron ESCAPE '\' OR Autor LIKE @patron ESCAPE '\' OR Isbn LIKE @patron ESCAPE '\')
-          AND (@tipo IS NULL OR Tipo = @tipo)
-        """;
-
-    private readonly ContextoSql contexto;
-
-    public RepositorioMateriales(ContextoSql contexto) => this.contexto = contexto;
-
-    public Task<Material?> ObtenerPorIdAsync(int id, CancellationToken ct = default)
+    public RepositorioMateriales(SqlConnection conexion, SqlTransaction transaccion)
     {
-        var comando = contexto.Comando($"SELECT {Columnas} FROM dbo.Materiales WHERE Id = @id;")
-            .Con("@id", SqlDbType.Int, id);
-        return LeerUnoAsync(comando, ct);
+        this.conexion = conexion;
+        this.transaccion = transaccion;
     }
 
-    public Task<Material?> ObtenerPorIsbnAsync(string isbn, CancellationToken ct = default)
+    public async Task<Material?> ObtenerPorIdAsync(int id)
+    {
+        string sql = "SELECT * FROM Materiales WHERE Id = @Id";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
+
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return LeerMaterial(reader);
+        }
+
+        return null;
+    }
+
+    public async Task<Material?> ObtenerPorIsbnAsync(string isbn)
     {
         if (!Isbn.EsValido(isbn))
         {
-            return Task.FromResult<Material?>(null);
+            return null;
         }
 
-        var comando = contexto.Comando($"SELECT {Columnas} FROM dbo.Materiales WHERE Isbn = @isbn;")
-            .Con("@isbn", SqlDbType.Char, Isbn.Normalizar(isbn), 13);
-        return LeerUnoAsync(comando, ct);
-    }
+        string sql = "SELECT * FROM Materiales WHERE Isbn = @Isbn";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@Isbn", SqlDbType.Char, 13).Value = Isbn.Normalizar(isbn);
 
-    /// <summary>
-    /// Paginación del lado del servidor: un solo viaje a la base trae el total (primer
-    /// resultado) y solo las filas de la página pedida con OFFSET/FETCH (segundo resultado).
-    /// </summary>
-    public async Task<Pagina<Material>> BuscarAsync(string? texto, TipoMaterial? tipo, int numeroPagina, int tamanoPagina, CancellationToken ct = default)
-    {
-        var saltar = ExtensionesSql.Saltar(numeroPagina, tamanoPagina);
-        await using var comando = contexto.Comando($"""
-            SELECT COUNT(*) FROM dbo.Materiales {Filtro};
-            SELECT {Columnas} FROM dbo.Materiales {Filtro}
-            ORDER BY Titulo, Id OFFSET @saltar ROWS FETCH NEXT @tamano ROWS ONLY;
-            """)
-            .Con("@patron", SqlDbType.NVarChar, ExtensionesSql.PatronContiene(texto), 210)
-            .Con("@tipo", SqlDbType.NVarChar, tipo?.ToString(), 10)
-            .Con("@saltar", SqlDbType.Int, saltar)
-            .Con("@tamano", SqlDbType.Int, tamanoPagina);
-
-        await using var lector = await comando.ExecuteReaderAsync(ct);
-        await lector.ReadAsync(ct);
-        var total = lector.GetInt32(0);
-
-        await lector.NextResultAsync(ct);
-        var elementos = new List<Material>();
-        while (await lector.ReadAsync(ct))
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
         {
-            elementos.Add(Mapear(lector));
+            return LeerMaterial(reader);
         }
 
-        return new Pagina<Material>(elementos, numeroPagina, tamanoPagina, total);
+        return null;
     }
 
-    public Task<int> AgregarAsync(Material material, CancellationToken ct = default)
+    // Paginación en el servidor: primero se cuenta el total y luego se traen solo
+    // las filas de la página con OFFSET / FETCH.
+    public async Task<Pagina<Material>> BuscarAsync(string? texto, TipoMaterial? tipo, int numeroPagina, int tamanoPagina)
     {
-        var comando = contexto.Comando("""
-            INSERT dbo.Materiales (Tipo, Isbn, Titulo, Autor, Editorial, AnioPublicacion, Categoria, StockTotal,
-                StockDisponible, Activo, Edicion, NumeroVolumen, Periodicidad, Universidad, GradoAcademico, Tutor)
-            OUTPUT INSERTED.Id
-            VALUES (@tipo, @isbn, @titulo, @autor, @editorial, @anio, @categoria, @total,
-                @disponible, @activo, @edicion, @volumen, @periodicidad, @universidad, @grado, @tutor);
-            """);
-        AgregarParametros(comando, material);
+        string filtro = " WHERE (@Texto IS NULL OR Titulo LIKE @Texto OR Autor LIKE @Texto OR Isbn LIKE @Texto)" +
+                        " AND (@Tipo IS NULL OR Tipo = @Tipo)";
 
-        return TraductorErroresSql.EjecutarAsync(async () =>
+        using SqlCommand cmdTotal = new SqlCommand("SELECT COUNT(*) FROM Materiales" + filtro, conexion, transaccion);
+        AgregarFiltros(cmdTotal, texto, tipo);
+        int total = (int)(await cmdTotal.ExecuteScalarAsync())!;
+
+        string sql = "SELECT * FROM Materiales" + filtro +
+                     " ORDER BY Titulo OFFSET @Saltar ROWS FETCH NEXT @Tamano ROWS ONLY";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        AgregarFiltros(cmd, texto, tipo);
+        cmd.Parameters.Add("@Saltar", SqlDbType.Int).Value = (numeroPagina - 1) * tamanoPagina;
+        cmd.Parameters.Add("@Tamano", SqlDbType.Int).Value = tamanoPagina;
+
+        List<Material> lista = new List<Material>();
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
         {
-            await using (comando)
-            {
-                return (int)(await comando.ExecuteScalarAsync(ct))!;
-            }
-        });
+            lista.Add(LeerMaterial(reader));
+        }
+
+        return new Pagina<Material>(lista, numeroPagina, tamanoPagina, total);
     }
 
-    public Task ActualizarAsync(Material material, CancellationToken ct = default)
+    public async Task<int> AgregarAsync(Material material)
     {
-        var comando = contexto.Comando("""
-            UPDATE dbo.Materiales SET Tipo = @tipo, Isbn = @isbn, Titulo = @titulo, Autor = @autor,
-                Editorial = @editorial, AnioPublicacion = @anio, Categoria = @categoria, StockTotal = @total,
-                StockDisponible = @disponible, Activo = @activo, Edicion = @edicion, NumeroVolumen = @volumen,
-                Periodicidad = @periodicidad, Universidad = @universidad, GradoAcademico = @grado, Tutor = @tutor
-            WHERE Id = @id;
-            """).Con("@id", SqlDbType.Int, material.Id);
-        AgregarParametros(comando, material);
+        string sql = "INSERT INTO Materiales (Tipo, Isbn, Titulo, Autor, Editorial, AnioPublicacion, Categoria, " +
+                     "StockTotal, StockDisponible, Activo, Edicion, NumeroVolumen, Periodicidad, Universidad, GradoAcademico, Tutor) " +
+                     "OUTPUT INSERTED.Id " +
+                     "VALUES (@Tipo, @Isbn, @Titulo, @Autor, @Editorial, @Anio, @Categoria, " +
+                     "@StockTotal, @StockDisponible, @Activo, @Edicion, @NumeroVolumen, @Periodicidad, @Universidad, @Grado, @Tutor)";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        AgregarParametros(cmd, material);
 
-        return TraductorErroresSql.EjecutarAsync(async () =>
+        try
         {
-            await using (comando)
-            {
-                await comando.ExecuteNonQueryAsync(ct);
-            }
-        });
-    }
-
-    private static void AgregarParametros(SqlCommand comando, Material m)
-    {
-        var libro = m as Libro;
-        var revista = m as Revista;
-        var tesis = m as Tesis;
-
-        comando
-            .Con("@tipo", SqlDbType.NVarChar, m.Tipo.ToString(), 10)
-            .Con("@isbn", SqlDbType.Char, m.Isbn, 13)
-            .Con("@titulo", SqlDbType.NVarChar, m.Titulo, 200)
-            .Con("@autor", SqlDbType.NVarChar, m.Autor, 150)
-            .Con("@editorial", SqlDbType.NVarChar, m.Editorial, 100)
-            .Con("@anio", SqlDbType.SmallInt, m.AnioPublicacion)
-            .Con("@categoria", SqlDbType.NVarChar, m.Categoria, 60)
-            .Con("@total", SqlDbType.Int, m.StockTotal)
-            .Con("@disponible", SqlDbType.Int, m.StockDisponible)
-            .Con("@activo", SqlDbType.Bit, m.Activo)
-            .Con("@edicion", SqlDbType.NVarChar, libro?.Edicion, 30)
-            .Con("@volumen", SqlDbType.NVarChar, revista?.NumeroVolumen, 30)
-            .Con("@periodicidad", SqlDbType.NVarChar, revista?.Periodicidad, 30)
-            .Con("@universidad", SqlDbType.NVarChar, tesis?.Universidad, 120)
-            .Con("@grado", SqlDbType.NVarChar, tesis?.GradoAcademico, 40)
-            .Con("@tutor", SqlDbType.NVarChar, tesis?.Tutor, 120);
-    }
-
-    private static async Task<Material?> LeerUnoAsync(SqlCommand comando, CancellationToken ct)
-    {
-        await using (comando)
+            return (int)(await cmd.ExecuteScalarAsync())!;
+        }
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
         {
-            await using var lector = await comando.ExecuteReaderAsync(ct);
-            return await lector.ReadAsync(ct) ? Mapear(lector) : null;
+            throw new DatoInvalidoException("Ya existe un material con ese ISBN.");
         }
     }
 
-    /// <summary>La columna Tipo decide qué subclase se construye.</summary>
-    private static Material Mapear(SqlDataReader r)
+    public async Task ActualizarAsync(Material material)
     {
-        var id = r.Entero("Id");
-        var isbn = r.Texto("Isbn");
-        var titulo = r.Texto("Titulo");
-        var autor = r.Texto("Autor");
-        var total = r.Entero("StockTotal");
-        var disponible = r.Entero("StockDisponible");
-        var editorial = r.TextoONulo("Editorial");
-        var anio = r.CortoONulo("AnioPublicacion");
-        var categoria = r.TextoONulo("Categoria");
-        var activo = r.Booleano("Activo");
+        string sql = "UPDATE Materiales SET Tipo = @Tipo, Isbn = @Isbn, Titulo = @Titulo, Autor = @Autor, " +
+                     "Editorial = @Editorial, AnioPublicacion = @Anio, Categoria = @Categoria, StockTotal = @StockTotal, " +
+                     "StockDisponible = @StockDisponible, Activo = @Activo, Edicion = @Edicion, NumeroVolumen = @NumeroVolumen, " +
+                     "Periodicidad = @Periodicidad, Universidad = @Universidad, GradoAcademico = @Grado, Tutor = @Tutor " +
+                     "WHERE Id = @Id";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        AgregarParametros(cmd, material);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = material.Id;
 
-        return Enum.Parse<TipoMaterial>(r.Texto("Tipo")) switch
+        try
         {
-            TipoMaterial.Libro => new Libro(id, isbn, titulo, autor, total, disponible, r.TextoONulo("Edicion"))
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        {
+            throw new DatoInvalidoException("Ya existe un material con ese ISBN.");
+        }
+    }
+
+    private static void AgregarFiltros(SqlCommand cmd, string? texto, TipoMaterial? tipo)
+    {
+        if (string.IsNullOrWhiteSpace(texto))
+        {
+            cmd.Parameters.Add("@Texto", SqlDbType.NVarChar, 210).Value = DBNull.Value;
+        }
+        else
+        {
+            cmd.Parameters.Add("@Texto", SqlDbType.NVarChar, 210).Value = "%" + texto.Trim() + "%";
+        }
+
+        if (tipo == null)
+        {
+            cmd.Parameters.Add("@Tipo", SqlDbType.NVarChar, 10).Value = DBNull.Value;
+        }
+        else
+        {
+            cmd.Parameters.Add("@Tipo", SqlDbType.NVarChar, 10).Value = tipo.ToString();
+        }
+    }
+
+    private static void AgregarParametros(SqlCommand cmd, Material m)
+    {
+        cmd.Parameters.Add("@Tipo", SqlDbType.NVarChar, 10).Value = m.Tipo.ToString();
+        cmd.Parameters.Add("@Isbn", SqlDbType.Char, 13).Value = m.Isbn;
+        cmd.Parameters.Add("@Titulo", SqlDbType.NVarChar, 200).Value = m.Titulo;
+        cmd.Parameters.Add("@Autor", SqlDbType.NVarChar, 150).Value = m.Autor;
+        cmd.Parameters.Add("@Editorial", SqlDbType.NVarChar, 100).Value = (object?)m.Editorial ?? DBNull.Value;
+        cmd.Parameters.Add("@Anio", SqlDbType.SmallInt).Value = (object?)m.AnioPublicacion ?? DBNull.Value;
+        cmd.Parameters.Add("@Categoria", SqlDbType.NVarChar, 60).Value = (object?)m.Categoria ?? DBNull.Value;
+        cmd.Parameters.Add("@StockTotal", SqlDbType.Int).Value = m.StockTotal;
+        cmd.Parameters.Add("@StockDisponible", SqlDbType.Int).Value = m.StockDisponible;
+        cmd.Parameters.Add("@Activo", SqlDbType.Bit).Value = m.Activo;
+
+        // Campos propios de cada tipo: los que no aplican se guardan en NULL.
+        object edicion = DBNull.Value;
+        object numeroVolumen = DBNull.Value;
+        object periodicidad = DBNull.Value;
+        object universidad = DBNull.Value;
+        object grado = DBNull.Value;
+        object tutor = DBNull.Value;
+
+        if (m is Libro libro)
+        {
+            edicion = (object?)libro.Edicion ?? DBNull.Value;
+        }
+        else if (m is Revista revista)
+        {
+            numeroVolumen = (object?)revista.NumeroVolumen ?? DBNull.Value;
+            periodicidad = (object?)revista.Periodicidad ?? DBNull.Value;
+        }
+        else if (m is Tesis tesis)
+        {
+            universidad = tesis.Universidad;
+            grado = (object?)tesis.GradoAcademico ?? DBNull.Value;
+            tutor = (object?)tesis.Tutor ?? DBNull.Value;
+        }
+
+        cmd.Parameters.Add("@Edicion", SqlDbType.NVarChar, 30).Value = edicion;
+        cmd.Parameters.Add("@NumeroVolumen", SqlDbType.NVarChar, 30).Value = numeroVolumen;
+        cmd.Parameters.Add("@Periodicidad", SqlDbType.NVarChar, 30).Value = periodicidad;
+        cmd.Parameters.Add("@Universidad", SqlDbType.NVarChar, 120).Value = universidad;
+        cmd.Parameters.Add("@Grado", SqlDbType.NVarChar, 40).Value = grado;
+        cmd.Parameters.Add("@Tutor", SqlDbType.NVarChar, 120).Value = tutor;
+    }
+
+    // Según la columna Tipo se crea un Libro, una Revista o una Tesis (herencia).
+    private static Material LeerMaterial(SqlDataReader reader)
+    {
+        int id = (int)reader["Id"];
+        string tipo = (string)reader["Tipo"];
+        string isbn = (string)reader["Isbn"];
+        string titulo = (string)reader["Titulo"];
+        string autor = (string)reader["Autor"];
+        int stockTotal = (int)reader["StockTotal"];
+        int stockDisponible = (int)reader["StockDisponible"];
+
+        Material material;
+        if (tipo == "Libro")
+        {
+            material = new Libro(id, isbn, titulo, autor, stockTotal, stockDisponible, reader["Edicion"] as string)
             {
-                Editorial = editorial, AnioPublicacion = anio, Categoria = categoria, Activo = activo,
-            },
-            TipoMaterial.Revista => new Revista(id, isbn, titulo, autor, total, disponible, r.TextoONulo("NumeroVolumen"), r.TextoONulo("Periodicidad"))
+                Editorial = reader["Editorial"] as string,
+                AnioPublicacion = reader["AnioPublicacion"] as short?,
+                Categoria = reader["Categoria"] as string,
+                Activo = (bool)reader["Activo"],
+            };
+        }
+        else if (tipo == "Revista")
+        {
+            material = new Revista(id, isbn, titulo, autor, stockTotal, stockDisponible, reader["NumeroVolumen"] as string, reader["Periodicidad"] as string)
             {
-                Editorial = editorial, AnioPublicacion = anio, Categoria = categoria, Activo = activo,
-            },
-            TipoMaterial.Tesis => new Tesis(id, isbn, titulo, autor, total, disponible, r.Texto("Universidad"), r.TextoONulo("GradoAcademico"), r.TextoONulo("Tutor"))
+                Editorial = reader["Editorial"] as string,
+                AnioPublicacion = reader["AnioPublicacion"] as short?,
+                Categoria = reader["Categoria"] as string,
+                Activo = (bool)reader["Activo"],
+            };
+        }
+        else
+        {
+            material = new Tesis(id, isbn, titulo, autor, stockTotal, stockDisponible, (string)reader["Universidad"], reader["GradoAcademico"] as string, reader["Tutor"] as string)
             {
-                Editorial = editorial, AnioPublicacion = anio, Categoria = categoria, Activo = activo,
-            },
-            _ => throw new InvalidOperationException("Tipo de material desconocido en la base."),
-        };
+                Editorial = reader["Editorial"] as string,
+                AnioPublicacion = reader["AnioPublicacion"] as short?,
+                Categoria = reader["Categoria"] as string,
+                Activo = (bool)reader["Activo"],
+            };
+        }
+
+        return material;
     }
 }

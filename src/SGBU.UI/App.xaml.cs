@@ -1,10 +1,37 @@
 using System.Windows;
+using Microsoft.Extensions.Configuration;
+using SGBU.Data;
+using SGBU.Services.Seguridad;
+using SGBU.UI.Navegacion;
 
 namespace SGBU.UI;
 
-/// <summary>
-/// Punto de entrada de la aplicación WPF.
-/// </summary>
 public partial class App : Application
 {
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        // Se lee la cadena de conexión de appsettings.json (o de appsettings.Local.json si existe).
+        IConfiguration configuracion = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.Local.json", optional: true)
+            .Build();
+
+        string? cadena = configuracion.GetConnectionString("Sgbu");
+        if (string.IsNullOrWhiteSpace(cadena))
+        {
+            MessageBox.Show("Falta la cadena de conexión en appsettings.json.", "SGBU");
+            Shutdown();
+            return;
+        }
+
+        // Aquí se crean los objetos y se le pasa a cada uno lo que necesita.
+        FabricaUnidadDeTrabajoSql fabrica = new FabricaUnidadDeTrabajoSql(cadena);
+        ServicioAutenticacion autenticacion = new ServicioAutenticacion(fabrica, new HasherBCrypt());
+
+        ServicioVentanas ventanas = new ServicioVentanas(autenticacion);
+        ventanas.MostrarLogin();
+    }
 }

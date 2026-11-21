@@ -4,16 +4,16 @@ namespace SGBU.Domain.Repositorios;
 
 public interface IRepositorioUsuarios
 {
-    Task<Usuario?> ObtenerPorIdAsync(int id, CancellationToken ct = default);
+    Task<Usuario?> ObtenerPorIdAsync(int id);
 
-    Task<Usuario?> ObtenerPorCarneAsync(string carne, CancellationToken ct = default);
+    Task<Usuario?> ObtenerPorCarneAsync(string carne);
 
     /// <summary>Para el login.</summary>
-    Task<Usuario?> ObtenerPorEmailAsync(string email, CancellationToken ct = default);
+    Task<Usuario?> ObtenerPorEmailAsync(string email);
 
-    Task<Pagina<Usuario>> BuscarAsync(string? texto, int numeroPagina, int tamanoPagina, CancellationToken ct = default);
+    Task<Pagina<Usuario>> BuscarAsync(string? texto, int numeroPagina, int tamanoPagina);
 
-    Task<int> AgregarAsync(Usuario usuario, CancellationToken ct = default);
+    Task<int> AgregarAsync(Usuario usuario);
 
-    Task ActualizarAsync(Usuario usuario, CancellationToken ct = default);
+    Task ActualizarAsync(Usuario usuario);
 }

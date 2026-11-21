@@ -2,7 +2,7 @@ using SGBU.Domain.Reglas;
 
 namespace SGBU.Domain.Entidades;
 
-public sealed class Revista : Material
+public class Revista : Material
 {
     public Revista(string isbn, string titulo, string autor, int stockTotal, string? numeroVolumen, string? periodicidad)
         : this(0, isbn, titulo, autor, stockTotal, stockTotal, numeroVolumen, periodicidad)

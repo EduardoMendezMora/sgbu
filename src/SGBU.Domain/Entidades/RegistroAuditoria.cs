@@ -3,7 +3,7 @@ using SGBU.Domain.Reglas;
 namespace SGBU.Domain.Entidades;
 
 /// <summary>Una fila de la bitácora: quién, qué acción y cuándo. No cambia después de creada.</summary>
-public sealed class RegistroAuditoria
+public class RegistroAuditoria
 {
     public RegistroAuditoria(int? usuarioId, string accion, string? entidad, int? entidadId, string? detalle, DateTime fecha)
     {

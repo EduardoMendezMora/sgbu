@@ -2,34 +2,51 @@ using System.Text.RegularExpressions;
 
 namespace SGBU.Domain.Reglas;
 
-/// <summary>
-/// Validaciones con expresiones regulares que pide el enunciado.
-/// [GeneratedRegex] hace que .NET compile la expresión al compilar el proyecto, en vez de
-/// interpretarla cada vez que se usa: es más rápido y un error en el patrón se ve al compilar.
-/// </summary>
-public static partial class Validador
+// Validaciones con expresiones regulares (Regex) que pide el enunciado.
+public static class Validador
 {
-    public static bool EsEmailValido(string? email) =>
-        !string.IsNullOrWhiteSpace(email) && PatronEmail().IsMatch(email);
+    // algo@algo.algo, sin espacios
+    private const string PatronEmail = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
 
-    /// <summary>Cédula costarricense (9 dígitos) o DIMEX (11 o 12), con o sin guiones.</summary>
-    public static bool EsDniValido(string? dni) =>
-        !string.IsNullOrWhiteSpace(dni) && PatronDni().IsMatch(QuitarSeparadores(dni));
+    // Cédula de 9 dígitos o DIMEX de 11 o 12 dígitos
+    private const string PatronDni = @"^(\d{9}|\d{11,12})$";
 
-    /// <summary>Teléfono de Costa Rica: 8 dígitos que empiezan de 2 a 8, opcionalmente con +506.</summary>
-    public static bool EsTelefonoValido(string? telefono) =>
-        !string.IsNullOrWhiteSpace(telefono) && PatronTelefono().IsMatch(QuitarSeparadores(telefono));
+    // Teléfono de Costa Rica: 8 dígitos que empiezan de 2 a 8, con +506 opcional
+    private const string PatronTelefono = @"^(\+506)?[2-8]\d{7}$";
 
-    private static string QuitarSeparadores(string valor) =>
-        valor.Replace("-", string.Empty, StringComparison.Ordinal).Replace(" ", string.Empty, StringComparison.Ordinal);
+    public static bool EsEmailValido(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return false;
+        }
 
-    // algo@algo.algo, sin espacios ni una segunda @
-    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
-    private static partial Regex PatronEmail();
+        return Regex.IsMatch(email, PatronEmail);
+    }
 
-    [GeneratedRegex(@"^(\d{9}|\d{11,12})$")]
-    private static partial Regex PatronDni();
+    public static bool EsDniValido(string? dni)
+    {
+        if (string.IsNullOrWhiteSpace(dni))
+        {
+            return false;
+        }
 
-    [GeneratedRegex(@"^(\+506)?[2-8]\d{7}$")]
-    private static partial Regex PatronTelefono();
+        return Regex.IsMatch(QuitarSeparadores(dni), PatronDni);
+    }
+
+    public static bool EsTelefonoValido(string? telefono)
+    {
+        if (string.IsNullOrWhiteSpace(telefono))
+        {
+            return false;
+        }
+
+        return Regex.IsMatch(QuitarSeparadores(telefono), PatronTelefono);
+    }
+
+    // Quita guiones y espacios: "8888-0001" queda "88880001".
+    private static string QuitarSeparadores(string valor)
+    {
+        return valor.Replace("-", string.Empty).Replace(" ", string.Empty);
+    }
 }

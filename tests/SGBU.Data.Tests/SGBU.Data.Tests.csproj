@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\SGBU.Domain\SGBU.Domain.csproj" />
     <ProjectReference Include="..\..\src\SGBU.Data\SGBU.Data.csproj" />
+    <ProjectReference Include="..\..\src\SGBU.Services\SGBU.Services.csproj" />
   </ItemGroup>
 
 </Project>

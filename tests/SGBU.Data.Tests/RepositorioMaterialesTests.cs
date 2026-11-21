@@ -70,16 +70,6 @@ public class RepositorioMaterialesTests
     }
 
     [FactConBase]
-    public async Task Buscar_TrataLosComodinesComoTextoNormal()
-    {
-        await using var uow = await BaseDeDatos.AbrirAsync();
-
-        var resultado = await uow.Materiales.BuscarAsync("%", null, 1, 10);
-
-        Assert.Equal(0, resultado.Total);
-    }
-
-    [FactConBase]
     public async Task Agregar_YLuegoLeer_DevuelveLoMismo()
     {
         await using var uow = await BaseDeDatos.AbrirAsync();

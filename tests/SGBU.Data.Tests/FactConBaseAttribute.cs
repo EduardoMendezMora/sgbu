@@ -5,7 +5,7 @@ namespace SGBU.Data.Tests;
 /// <summary>
 /// Igual que [Fact], pero se omite (en vez de fallar) si no hay base de datos configurada.
 /// </summary>
-public sealed class FactConBaseAttribute : FactAttribute
+public class FactConBaseAttribute : FactAttribute
 {
     public FactConBaseAttribute()
     {

@@ -6,5 +6,5 @@ namespace SGBU.Domain.Repositorios;
 /// </summary>
 public interface IFabricaUnidadDeTrabajo
 {
-    Task<IUnidadDeTrabajo> CrearAsync(CancellationToken ct = default);
+    Task<IUnidadDeTrabajo> CrearAsync();
 }

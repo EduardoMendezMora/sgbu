@@ -1,90 +1,88 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
-using SGBU.Data.Infraestructura;
 using SGBU.Domain.Entidades;
+using SGBU.Domain.Excepciones;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data.Repositorios;
 
-/// <summary>
-/// Multas. TieneMultasPendientesAsync se llama en cada préstamo; usa EXISTS (se detiene en
-/// la primera fila) y el índice filtrado IX_Multas_Usuario_Pendientes.
-/// </summary>
-internal sealed class RepositorioMultas : IRepositorioMultas
+public class RepositorioMultas : IRepositorioMultas
 {
-    private readonly ContextoSql contexto;
+    private readonly SqlConnection conexion;
+    private readonly SqlTransaction transaccion;
 
-    public RepositorioMultas(ContextoSql contexto) => this.contexto = contexto;
-
-    public async Task<bool> TieneMultasPendientesAsync(int usuarioId, CancellationToken ct = default)
+    public RepositorioMultas(SqlConnection conexion, SqlTransaction transaccion)
     {
-        await using var comando = contexto.Comando("""
-            SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.Multas WHERE UsuarioId = @u AND Estado = N'Pendiente')
-                        THEN 1 ELSE 0 END;
-            """).Con("@u", SqlDbType.Int, usuarioId);
-        return (int)(await comando.ExecuteScalarAsync(ct))! == 1;
+        this.conexion = conexion;
+        this.transaccion = transaccion;
     }
 
-    public async Task<IReadOnlyList<Multa>> ListarPendientesDeUsuarioAsync(int usuarioId, CancellationToken ct = default)
+    public async Task<bool> TieneMultasPendientesAsync(int usuarioId)
     {
-        await using var comando = contexto.Comando("""
-            SELECT Id, PrestamoId, UsuarioId, DiasAtraso, Monto, Estado, FechaGeneracion, FechaPago
-            FROM dbo.Multas WHERE UsuarioId = @u AND Estado = N'Pendiente' ORDER BY FechaGeneracion;
-            """).Con("@u", SqlDbType.Int, usuarioId);
+        string sql = "SELECT COUNT(*) FROM Multas WHERE UsuarioId = @UsuarioId AND Estado = 'Pendiente'";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+        int cantidad = (int)(await cmd.ExecuteScalarAsync())!;
+        return cantidad > 0;
+    }
 
-        await using var lector = await comando.ExecuteReaderAsync(ct);
-        var lista = new List<Multa>();
-        while (await lector.ReadAsync(ct))
+    public async Task<IReadOnlyList<Multa>> ListarPendientesDeUsuarioAsync(int usuarioId)
+    {
+        string sql = "SELECT * FROM Multas WHERE UsuarioId = @UsuarioId AND Estado = 'Pendiente' ORDER BY FechaGeneracion";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+        List<Multa> lista = new List<Multa>();
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
         {
+            EstadoMulta estado = (string)reader["Estado"] == "Pagada" ? EstadoMulta.Pagada : EstadoMulta.Pendiente;
             lista.Add(new Multa(
-                lector.Entero("Id"), lector.Entero("PrestamoId"), lector.Entero("UsuarioId"), lector.Entero("DiasAtraso"),
-                lector.Decimal("Monto"), Enum.Parse<EstadoMulta>(lector.Texto("Estado")),
-                lector.Fecha("FechaGeneracion"), lector.FechaONula("FechaPago")));
+                (int)reader["Id"],
+                (int)reader["PrestamoId"],
+                (int)reader["UsuarioId"],
+                (int)reader["DiasAtraso"],
+                (decimal)reader["Monto"],
+                estado,
+                (DateTime)reader["FechaGeneracion"],
+                reader["FechaPago"] as DateTime?));
         }
 
         return lista;
     }
 
-    public Task<int> AgregarAsync(Multa multa, CancellationToken ct = default)
+    public async Task<int> AgregarAsync(Multa multa)
     {
-        var comando = contexto.Comando("""
-            INSERT dbo.Multas (PrestamoId, UsuarioId, DiasAtraso, Monto, Estado, FechaGeneracion, FechaPago)
-            OUTPUT INSERTED.Id
-            VALUES (@prestamo, @usuario, @dias, @monto, @estado, @generada, @pago);
-            """)
-            .Con("@prestamo", SqlDbType.Int, multa.PrestamoId)
-            .Con("@usuario", SqlDbType.Int, multa.UsuarioId)
-            .Con("@dias", SqlDbType.Int, multa.DiasAtraso)
-            .Con("@monto", SqlDbType.Decimal, multa.Monto)
-            .Con("@estado", SqlDbType.NVarChar, multa.Estado.ToString(), 10)
-            .Con("@generada", SqlDbType.DateTime2, multa.FechaGeneracion)
-            .Con("@pago", SqlDbType.DateTime2, multa.FechaPago);
-        comando.Parameters["@monto"].Precision = 10;
-        comando.Parameters["@monto"].Scale = 2;
+        string sql = "INSERT INTO Multas (PrestamoId, UsuarioId, DiasAtraso, Monto, Estado, FechaGeneracion, FechaPago) " +
+                     "OUTPUT INSERTED.Id " +
+                     "VALUES (@PrestamoId, @UsuarioId, @DiasAtraso, @Monto, @Estado, @FechaGeneracion, @FechaPago)";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@PrestamoId", SqlDbType.Int).Value = multa.PrestamoId;
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = multa.UsuarioId;
+        cmd.Parameters.Add("@DiasAtraso", SqlDbType.Int).Value = multa.DiasAtraso;
+        cmd.Parameters.Add("@Monto", SqlDbType.Decimal).Value = multa.Monto;
+        cmd.Parameters.Add("@Estado", SqlDbType.NVarChar, 10).Value = multa.Estado.ToString();
+        cmd.Parameters.Add("@FechaGeneracion", SqlDbType.DateTime2).Value = multa.FechaGeneracion;
+        cmd.Parameters.Add("@FechaPago", SqlDbType.DateTime2).Value = (object?)multa.FechaPago ?? DBNull.Value;
 
-        return TraductorErroresSql.EjecutarAsync(async () =>
+        try
         {
-            await using (comando)
-            {
-                return (int)(await comando.ExecuteScalarAsync(ct))!;
-            }
-        });
+            return (int)(await cmd.ExecuteScalarAsync())!;
+        }
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        {
+            throw new DatoInvalidoException("Ese préstamo ya tiene una multa.");
+        }
     }
 
-    /// <summary>Lo que cambia de una multa es su pago.</summary>
-    public Task ActualizarAsync(Multa multa, CancellationToken ct = default)
+    // Al pagar solo cambian el estado y la fecha de pago.
+    public async Task ActualizarAsync(Multa multa)
     {
-        var comando = contexto.Comando("UPDATE dbo.Multas SET Estado = @estado, FechaPago = @pago WHERE Id = @id;")
-            .Con("@id", SqlDbType.Int, multa.Id)
-            .Con("@estado", SqlDbType.NVarChar, multa.Estado.ToString(), 10)
-            .Con("@pago", SqlDbType.DateTime2, multa.FechaPago);
-
-        return TraductorErroresSql.EjecutarAsync(async () =>
-        {
-            await using (comando)
-            {
-                await comando.ExecuteNonQueryAsync(ct);
-            }
-        });
+        string sql = "UPDATE Multas SET Estado = @Estado, FechaPago = @FechaPago WHERE Id = @Id";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = multa.Id;
+        cmd.Parameters.Add("@Estado", SqlDbType.NVarChar, 10).Value = multa.Estado.ToString();
+        cmd.Parameters.Add("@FechaPago", SqlDbType.DateTime2).Value = (object?)multa.FechaPago ?? DBNull.Value;
+        await cmd.ExecuteNonQueryAsync();
     }
 }

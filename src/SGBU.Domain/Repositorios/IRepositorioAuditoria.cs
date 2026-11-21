@@ -4,5 +4,5 @@ namespace SGBU.Domain.Repositorios;
 
 public interface IRepositorioAuditoria
 {
-    Task RegistrarAsync(RegistroAuditoria registro, CancellationToken ct = default);
+    Task RegistrarAsync(RegistroAuditoria registro);
 }

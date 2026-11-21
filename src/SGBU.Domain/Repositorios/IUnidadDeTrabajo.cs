@@ -19,7 +19,7 @@ public interface IUnidadDeTrabajo : IAsyncDisposable
 
     IRepositorioAuditoria Auditoria { get; }
 
-    Task ConfirmarAsync(CancellationToken ct = default);
+    Task ConfirmarAsync();
 
-    Task RevertirAsync(CancellationToken ct = default);
+    Task RevertirAsync();
 }

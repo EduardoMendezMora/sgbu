@@ -2,7 +2,7 @@ using SGBU.Domain.Reglas;
 
 namespace SGBU.Domain.Entidades;
 
-public sealed class Libro : Material
+public class Libro : Material
 {
     /// <summary>Libro nuevo: todos sus ejemplares empiezan disponibles.</summary>
     public Libro(string isbn, string titulo, string autor, int stockTotal, string? edicion = null)

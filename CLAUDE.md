@@ -13,6 +13,11 @@ Entrega final: semana 13 del curso (el trabajo empezó en la semana 10).
   stored procedure) la escribe Eduardo con guía; las repetitivas las escribe Claude y explica
   qué cambia.
 - Eduardo suele mandar capturas de pantalla en lugar de describir los errores.
+- **Código y vistas sencillos, de nivel estudiante** (pedido de Eduardo): ADO.NET clásico
+  (`cmd.Parameters.Add(...).Value = x`, `(int)reader["Id"]`, `reader["X"] as string`),
+  `if`/`switch` simples, `List<T>`, comentarios cortos, XAML básico (Grid, StackPanel,
+  DataGrid, sin estilos elaborados). Nada de raw strings, primary constructors, helpers
+  fluidos, `CancellationToken`, contenedor de inyección de dependencias ni trucos avanzados.
 
 ## Tecnologías obligatorias (del enunciado)
 
@@ -31,7 +36,7 @@ Clean Architecture con dependencias que solo apuntan hacia Domain:
 | `src/SGBU.Services` | Casos de uso | Domain |
 | `src/SGBU.UI` | WPF: Views y ViewModels; arma la inyección de dependencias | todos |
 | `tests/SGBU.Tests` | Pruebas unitarias xUnit | Domain, Services |
-| `tests/SGBU.Data.Tests` | Pruebas de integración contra SQL Server (necesitan `SGBU_CONN`; sin ella se omiten) | Domain, Data |
+| `tests/SGBU.Data.Tests` | Pruebas de integración contra SQL Server (necesitan `SGBU_CONN`; sin ella se omiten) | Domain, Data, Services |
 
 `tests/SGBU.Tests/ArquitecturaTests.cs` falla si se rompen estas reglas. Sin lógica de negocio
 en el code-behind de las vistas.
@@ -92,8 +97,11 @@ dotnet run --project src/SGBU.UI      # solo en Windows
 - [x] 3. Domain: entidades con herencia, excepciones propias, interfaces de repositorio
       (rama `feature/domain`; 90 pruebas, 89 % de cobertura en Domain)
 - [x] 4. Data: repositorios ADO.NET, Unit of Work, transacciones (rama `feature/data`;
-      23 pruebas de integración, 94 % de cobertura en Data)
-- [ ] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM
+      22 pruebas de integración)
+- [x] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM (rama `feature/login`;
+      entra con email o carné, permisos por rol en `Sesion`, LOGIN y LOGIN_FALLIDO auditados;
+      código simplificado a nivel estudiante).
+      Falta verlo en una PC con Windows: `README.md`, sección "Cómo probarlo en Windows"
 - [ ] 6. Catálogo y Usuarios: CRUD, búsquedas, validaciones, paginación
 - [ ] 7. Préstamos y devoluciones con stored procedures
 - [ ] 8. Multas y pagos
