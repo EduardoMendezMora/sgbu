@@ -38,12 +38,13 @@
     </ComponentGroup>
   </Fragment>
 
+  <!-- Windows pide que el componente del acceso directo se marque con una clave en HKCU. -->
   <Fragment>
     <Component Id="AccesoDirecto" Directory="CarpetaMenu">
       <Shortcut Id="AccesoMenu" Name="SGBU - Biblioteca Universitaria"
                 Target="[INSTALLFOLDER]SGBU.UI.exe" WorkingDirectory="INSTALLFOLDER" />
       <RemoveFolder Id="QuitarCarpetaMenu" On="uninstall" />
-      <RegistryValue Root="HKLM" Key="Software\SGBU" Name="Instalado" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKCU" Key="Software\SGBU" Name="Instalado" Type="integer" Value="1" KeyPath="yes" />
     </Component>
   </Fragment>
 </Wix>
