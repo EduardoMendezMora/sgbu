@@ -28,7 +28,7 @@
     <DataGrid Grid.Row="1" ItemsSource="{Binding Datos}" AutoGenerateColumns="True" IsReadOnly="True" />
 
     <!-- Gráfico (solo para el Top 10) -->
-    <lvc:CartesianChart Grid.Row="2" Height="220" Margin="0,8,0,0" Series="{Binding Series}" XAxes="{Binding EjeX}"
+    <lvc:CartesianChart Grid.Row="2" Height="220" Margin="0,8,0,0" Series="{Binding Series}" XAxes="{Binding EjeX}" YAxes="{Binding EjeY}"
                         Visibility="{Binding MostrarGrafico, Converter={StaticResource Visible}}" />
 
     <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="DarkBlue" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />

@@ -33,6 +33,9 @@ public partial class ReportesViewModel : ObservableObject
     private Axis[] ejeX = new Axis[0];
 
     [ObservableProperty]
+    private Axis[] ejeY = new Axis[0];
+
+    [ObservableProperty]
     private string mensaje = string.Empty;
 
     public ReportesViewModel(ServicioReportes servicio, Sesion sesion, IServicioVentanas ventanas)
@@ -180,5 +183,11 @@ public partial class ReportesViewModel : ObservableObject
         eje.Labels = titulos;
         eje.LabelsRotation = 20;
         EjeX = new Axis[] { eje };
+
+        // El eje vertical empieza en 0 para que las barras se comparen bien.
+        Axis ejeVertical = new Axis();
+        ejeVertical.MinLimit = 0;
+        ejeVertical.MinStep = 1;
+        EjeY = new Axis[] { ejeVertical };
     }
 }
