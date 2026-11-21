@@ -6,7 +6,7 @@ Scripts SQL del proyecto, numerados en el orden en que se ejecutan.
 |---|---|
 | `001_crear_base.sql` | Crea la base `SGBU` |
 | `002_tablas.sql` | Roles, Usuarios, Materiales (Libro/Revista/Tesis en una tabla), Prestamos, Reservas, Auditoria |
-| `003_tabla_multas.sql` | Tabla Multas (pendiente, la escribe Eduardo con la guía del archivo) |
+| `003_tabla_multas.sql` | Tabla Multas: una por préstamo atrasado, monto entre 0 y 2000 |
 | `004_indices.sql` | Índices para búsquedas y reportes |
 | `005_datos_iniciales.sql` | Datos de prueba |
 | `pruebas/verificar_restricciones.sql` | Intenta guardar datos inválidos y comprueba que la base los rechaza |
