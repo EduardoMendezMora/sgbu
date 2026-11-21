@@ -30,7 +30,8 @@ Clean Architecture con dependencias que solo apuntan hacia Domain:
 | `src/SGBU.Data` | Repositorios ADO.NET, Unit of Work, transacciones | Domain |
 | `src/SGBU.Services` | Casos de uso | Domain |
 | `src/SGBU.UI` | WPF: Views y ViewModels; arma la inyección de dependencias | todos |
-| `tests/SGBU.Tests` | Pruebas xUnit | Domain, Services |
+| `tests/SGBU.Tests` | Pruebas unitarias xUnit | Domain, Services |
+| `tests/SGBU.Data.Tests` | Pruebas de integración contra SQL Server (necesitan `SGBU_CONN`; sin ella se omiten) | Domain, Data |
 
 `tests/SGBU.Tests/ArquitecturaTests.cs` falla si se rompen estas reglas. Sin lógica de negocio
 en el code-behind de las vistas.
@@ -77,6 +78,7 @@ Eduardo usa Claude Code en un **servidor Ubuntu**, no en Windows. Consecuencias:
 
 ```bash
 dotnet test tests/SGBU.Tests          # funciona en Ubuntu
+set -a; . /root/.sgbu_sql.env; set +a; dotnet test tests/SGBU.Data.Tests   # integración (Ubuntu)
 dotnet build SGBU.slnx                # solución completa (Windows o CI)
 dotnet run --project src/SGBU.UI      # solo en Windows
 ```
@@ -89,7 +91,8 @@ dotnet run --project src/SGBU.UI      # solo en Windows
       Límites por rol propuestos, sin confirmar.
 - [x] 3. Domain: entidades con herencia, excepciones propias, interfaces de repositorio
       (rama `feature/domain`; 90 pruebas, 89 % de cobertura en Domain)
-- [ ] 4. Data: repositorios ADO.NET, Unit of Work, transacciones
+- [x] 4. Data: repositorios ADO.NET, Unit of Work, transacciones (rama `feature/data`;
+      23 pruebas de integración, 94 % de cobertura en Data)
 - [ ] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM
 - [ ] 6. Catálogo y Usuarios: CRUD, búsquedas, validaciones, paginación
 - [ ] 7. Préstamos y devoluciones con stored procedures
