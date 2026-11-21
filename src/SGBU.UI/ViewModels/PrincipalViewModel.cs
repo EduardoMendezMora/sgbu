@@ -24,7 +24,7 @@ public partial class PrincipalViewModel : ObservableObject
         this.ventanas = ventanas;
         this.servicios = servicios;
         Sesion = sesion;
-        Bienvenida = Textos.Texto("T_Bienvenido") + sesion.NombreCompleto;
+        Bienvenida = Textos.Texto("T_Bienvenido") + " " + sesion.NombreCompleto;
 
         // Solo se agregan al menú las opciones que el rol puede usar.
         Opciones = new ObservableCollection<OpcionMenu>();

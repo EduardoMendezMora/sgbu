@@ -8,7 +8,7 @@
   <sys:String x:Key="T_Contrasena">Contraseña:</sys:String>
   <sys:String x:Key="T_Ingresar">Ingresar</sys:String>
   <sys:String x:Key="T_Ventana_Titulo">SGBU - Biblioteca Universitaria</sys:String>
-  <sys:String x:Key="T_Bienvenido">Bienvenido(a), </sys:String>
+  <sys:String x:Key="T_Bienvenido">Bienvenido(a),</sys:String>
   <sys:String x:Key="T_CerrarSesion">Cerrar sesión</sys:String>
   <sys:String x:Key="T_Menu_Catalogo">Catálogo</sys:String>
   <sys:String x:Key="T_Menu_MisPrestamos">Mis préstamos</sys:String>
@@ -95,4 +95,8 @@
   <sys:String x:Key="T_Claro">Claro</sys:String>
   <sys:String x:Key="T_Oscuro">Oscuro</sys:String>
   <sys:String x:Key="T_Aplicar">Guardar y aplicar</sys:String>
+  <sys:String x:Key="T_Pagina">Página</sys:String>
+  <sys:String x:Key="T_De">de</sys:String>
+  <sys:String x:Key="T_Materiales">materiales</sys:String>
+  <sys:String x:Key="T_Usuarios">usuarios</sys:String>
 </ResourceDictionary>
