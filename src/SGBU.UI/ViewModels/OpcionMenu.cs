@@ -14,4 +14,9 @@ public class OpcionMenu
     public string Titulo { get; }
 
     public Permiso Permiso { get; }
+
+    public override string ToString()
+    {
+        return Titulo;
+    }
 }

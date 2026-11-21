@@ -1,0 +1,56 @@
+name: Capturas
+
+# Abre la aplicación en Windows, toma fotos de las pantallas y las guarda en la rama
+# "capturas" (carpeta = nombre de la rama). También deja la aplicación lista para descargar.
+on:
+  push:
+    branches: [develop, 'feature/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capturas:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Crear base de datos (LocalDB)
+        shell: pwsh
+        run: .\database\ejecutar.ps1
+
+      - name: Publicar la aplicación
+        run: dotnet publish src/SGBU.UI -c Release -o publicar
+
+      - name: Tomar capturas
+        run: dotnet run --project tools/SGBU.Capturas -c Release -- "${{ github.workspace }}\publicar\SGBU.UI.exe" "${{ github.workspace }}\capturas"
+
+      - name: Guardar la aplicación para descargar
+        uses: actions/upload-artifact@v4
+        with:
+          name: SGBU-app
+          path: publicar
+
+      - name: Subir capturas a la rama "capturas"
+        if: always()
+        shell: pwsh
+        run: |
+          $rama = "${{ github.ref_name }}" -replace '/', '-'
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git fetch origin capturas 2>$null
+          if ($LASTEXITCODE -eq 0) { git worktree add salida origin/capturas } else { git worktree add --detach salida; Push-Location salida; git checkout --orphan capturas; git rm -rf . -q; Pop-Location }
+          New-Item -ItemType Directory -Force "salida\$rama" | Out-Null
+          Remove-Item "salida\$rama\*" -ErrorAction SilentlyContinue
+          Copy-Item capturas\*.png "salida\$rama\" -ErrorAction SilentlyContinue
+          Push-Location salida
+          git add -A
+          git commit -m "capturas de $rama (${{ github.sha }})" 2>$null
+          git push origin HEAD:capturas
+          Pop-Location

@@ -69,6 +69,20 @@ public class RepositorioUsuarios : IRepositorioUsuarios
         return new Pagina<Usuario>(lista, numeroPagina, tamanoPagina, total);
     }
 
+    public async Task<IReadOnlyList<Rol>> ListarRolesAsync()
+    {
+        using SqlCommand cmd = new SqlCommand("SELECT * FROM Roles ORDER BY Nombre", conexion, transaccion);
+
+        List<Rol> roles = new List<Rol>();
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            roles.Add(new Rol((int)reader["Id"], (string)reader["Nombre"], (int)reader["LimitePrestamos"], (int)reader["DiasPrestamo"]));
+        }
+
+        return roles;
+    }
+
     public async Task<int> AgregarAsync(Usuario usuario)
     {
         string sql = "INSERT INTO Usuarios (Carne, Dni, Nombre, Apellidos, Email, Telefono, RolId, PasswordHash, Activo) " +

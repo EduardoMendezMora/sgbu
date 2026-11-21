@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SGBU.Services.Catalogo;
 using SGBU.Services.Seguridad;
+using SGBU.Services.Usuarios;
 using SGBU.UI.Navegacion;
 
 namespace SGBU.UI.ViewModels;
@@ -9,16 +11,22 @@ namespace SGBU.UI.ViewModels;
 public partial class PrincipalViewModel : ObservableObject
 {
     private readonly IServicioVentanas ventanas;
+    private readonly ServicioCatalogo servicioCatalogo;
+    private readonly ServicioUsuarios servicioUsuarios;
 
     [ObservableProperty]
     private OpcionMenu? opcionSeleccionada;
 
+    // Lo que se muestra a la derecha: el ViewModel de la pantalla elegida.
+    // La ventana usa un DataTemplate para saber qué vista dibujar para cada ViewModel.
     [ObservableProperty]
-    private string contenido = string.Empty;
+    private object? vistaActual;
 
-    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas)
+    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios)
     {
         this.ventanas = ventanas;
+        this.servicioCatalogo = servicioCatalogo;
+        this.servicioUsuarios = servicioUsuarios;
         Sesion = sesion;
         Bienvenida = "Bienvenido(a), " + sesion.NombreCompleto;
 
@@ -32,6 +40,8 @@ public partial class PrincipalViewModel : ObservableObject
         AgregarSiPuede("Reportes", Permiso.VerReportes);
         AgregarSiPuede("Auditoría", Permiso.VerAuditoria);
         AgregarSiPuede("Configuración", Permiso.Configurar);
+
+        OpcionSeleccionada = Opciones[0];
     }
 
     public Sesion Sesion { get; }
@@ -40,16 +50,23 @@ public partial class PrincipalViewModel : ObservableObject
 
     public ObservableCollection<OpcionMenu> Opciones { get; }
 
-    // Se ejecuta solo cada vez que cambia la opción seleccionada.
     partial void OnOpcionSeleccionadaChanged(OpcionMenu? value)
     {
         if (value == null)
         {
-            Contenido = string.Empty;
+            VistaActual = null;
+        }
+        else if (value.Permiso == Permiso.VerCatalogo)
+        {
+            VistaActual = new CatalogoViewModel(servicioCatalogo, Sesion);
+        }
+        else if (value.Permiso == Permiso.GestionarUsuarios)
+        {
+            VistaActual = new UsuariosViewModel(servicioUsuarios, Sesion);
         }
         else
         {
-            Contenido = value.Titulo + ": pantalla en construcción.";
+            VistaActual = value.Titulo + ": pantalla en construcción.";
         }
     }
 

@@ -24,5 +24,22 @@ jobs:
       - name: Compilar
         run: dotnet build SGBU.slnx --configuration Release --no-restore
 
+      # Pruebas de integración: se crea la base en SQL Server LocalDB (viene en el runner de
+      # Windows). Si LocalDB no estuviera disponible, el paso no detiene el CI y las pruebas
+      # de SGBU.Data.Tests se marcan como omitidas en vez de fallar.
+      - name: Crear base de datos de prueba (LocalDB)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          sqllocaldb start MSSQLLocalDB
+          $servidor = "(localdb)\MSSQLLocalDB"
+          foreach ($script in (Get-ChildItem database/0*.sql | Sort-Object Name)) {
+            sqlcmd -S $servidor -b -I -f 65001 -i $script.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Falló $($script.Name)" }
+          }
+          sqlcmd -S $servidor -b -I -f 65001 -i database/pruebas/verificar_restricciones.sql
+          if ($LASTEXITCODE -ne 0) { throw "Fallaron las pruebas de la base" }
+          "SGBU_CONN=Server=$servidor;Database=SGBU;Integrated Security=True;TrustServerCertificate=True" >> $env:GITHUB_ENV
+
       - name: Ejecutar pruebas con cobertura
         run: dotnet test SGBU.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"
