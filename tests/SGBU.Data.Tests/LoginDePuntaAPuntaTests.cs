@@ -1,7 +1,6 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using SGBU.Domain.Excepciones;
-using SGBU.Services.Comun;
 using SGBU.Services.Seguridad;
 using Xunit;
 
@@ -16,8 +15,7 @@ public class LoginDePuntaAPuntaTests
     [FactConBase]
     public async Task Admin_EntraConLaClaveDelSeed_YQuedaAuditado()
     {
-        var servicio = new ServicioAutenticacion(
-            new FabricaUnidadDeTrabajoSql(BaseDeDatos.Cadena!), new HasherBCrypt(), new RelojSistema());
+        var servicio = new ServicioAutenticacion(new FabricaUnidadDeTrabajoSql(BaseDeDatos.Cadena!), new HasherBCrypt());
         var desde = DateTime.Now.AddSeconds(-1);
 
         try

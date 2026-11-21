@@ -7,7 +7,7 @@ namespace SGBU.Domain.Entidades;
 /// Ningún método usa DateTime.Now por dentro: la fecha "de hoy" se recibe como parámetro.
 /// Así las pruebas pueden fijar la fecha y dar siempre el mismo resultado.
 /// </summary>
-public sealed class Prestamo
+public class Prestamo
 {
     public Prestamo(int id, int usuarioId, int materialId, DateTime fechaPrestamo, DateOnly fechaVencimiento, DateTime? fechaDevolucion, bool renovado)
     {

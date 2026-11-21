@@ -1,32 +1,32 @@
 using System.Data;
-using SGBU.Data.Infraestructura;
+using Microsoft.Data.SqlClient;
 using SGBU.Domain.Entidades;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data.Repositorios;
 
-/// <summary>
-/// Bitácora. Va dentro de la misma transacción que la operación: si el préstamo se revierte,
-/// su registro de auditoría también, y nunca queda un "PRESTAMO" que no ocurrió.
-/// </summary>
-internal sealed class RepositorioAuditoria : IRepositorioAuditoria
+public class RepositorioAuditoria : IRepositorioAuditoria
 {
-    private readonly ContextoSql contexto;
+    private readonly SqlConnection conexion;
+    private readonly SqlTransaction transaccion;
 
-    public RepositorioAuditoria(ContextoSql contexto) => this.contexto = contexto;
-
-    public async Task RegistrarAsync(RegistroAuditoria registro, CancellationToken ct = default)
+    public RepositorioAuditoria(SqlConnection conexion, SqlTransaction transaccion)
     {
-        await using var comando = contexto.Comando("""
-            INSERT dbo.Auditoria (UsuarioId, Accion, Entidad, EntidadId, Detalle, Fecha)
-            VALUES (@usuario, @accion, @entidad, @entidadId, @detalle, @fecha);
-            """)
-            .Con("@usuario", SqlDbType.Int, registro.UsuarioId)
-            .Con("@accion", SqlDbType.NVarChar, registro.Accion, 50)
-            .Con("@entidad", SqlDbType.NVarChar, registro.Entidad, 50)
-            .Con("@entidadId", SqlDbType.Int, registro.EntidadId)
-            .Con("@detalle", SqlDbType.NVarChar, registro.Detalle, 500)
-            .Con("@fecha", SqlDbType.DateTime2, registro.Fecha);
-        await comando.ExecuteNonQueryAsync(ct);
+        this.conexion = conexion;
+        this.transaccion = transaccion;
+    }
+
+    public async Task RegistrarAsync(RegistroAuditoria registro)
+    {
+        string sql = "INSERT INTO Auditoria (UsuarioId, Accion, Entidad, EntidadId, Detalle, Fecha) " +
+                     "VALUES (@UsuarioId, @Accion, @Entidad, @EntidadId, @Detalle, @Fecha)";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = (object?)registro.UsuarioId ?? DBNull.Value;
+        cmd.Parameters.Add("@Accion", SqlDbType.NVarChar, 50).Value = registro.Accion;
+        cmd.Parameters.Add("@Entidad", SqlDbType.NVarChar, 50).Value = (object?)registro.Entidad ?? DBNull.Value;
+        cmd.Parameters.Add("@EntidadId", SqlDbType.Int).Value = (object?)registro.EntidadId ?? DBNull.Value;
+        cmd.Parameters.Add("@Detalle", SqlDbType.NVarChar, 500).Value = (object?)registro.Detalle ?? DBNull.Value;
+        cmd.Parameters.Add("@Fecha", SqlDbType.DateTime2).Value = registro.Fecha;
+        await cmd.ExecuteNonQueryAsync();
     }
 }

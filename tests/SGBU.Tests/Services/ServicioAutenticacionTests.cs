@@ -24,7 +24,6 @@ public class ServicioAutenticacionTests
         Assert.Equal(4, sesion.UsuarioId);
         Assert.Equal("Carlos Jiménez Araya", sesion.NombreCompleto);
         Assert.Equal("Estudiante", sesion.Rol);
-        Assert.Equal(Ahora, sesion.Inicio);
         Assert.Equal(1, fabrica.Confirmaciones);
     }
 
@@ -48,7 +47,6 @@ public class ServicioAutenticacionTests
         var registro = Assert.Single(fabrica.Auditoria);
         Assert.Equal("LOGIN", registro.Accion);
         Assert.Equal(4, registro.UsuarioId);
-        Assert.Equal(Ahora, registro.Fecha);
     }
 
     [Fact]
@@ -163,6 +161,6 @@ public class ServicioAutenticacionTests
             new Rol(3, "Estudiante", 3, 7),
             Hash) { Id = 4 });
 
-        return (new ServicioAutenticacion(fabrica, new HasherBCrypt(), new RelojFijo(Ahora)), fabrica);
+        return (new ServicioAutenticacion(fabrica, new HasherBCrypt()), fabrica);
     }
 }

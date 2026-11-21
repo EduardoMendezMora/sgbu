@@ -1,113 +1,103 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
-using SGBU.Data.Infraestructura;
 using SGBU.Domain.Entidades;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data.Repositorios;
 
-/// <summary>
-/// Préstamos. "Activo" significa FechaDevolucion IS NULL; esas consultas usan el índice
-/// filtrado IX_Prestamos_Usuario_Activos de 004_indices.sql.
-/// </summary>
-internal sealed class RepositorioPrestamos : IRepositorioPrestamos
+public class RepositorioPrestamos : IRepositorioPrestamos
 {
-    private const string Consulta = """
-        SELECT Id, UsuarioId, MaterialId, FechaPrestamo, FechaVencimiento, FechaDevolucion, Renovado, RegistradoPorId
-        FROM dbo.Prestamos
-        """;
+    private readonly SqlConnection conexion;
+    private readonly SqlTransaction transaccion;
 
-    private readonly ContextoSql contexto;
-
-    public RepositorioPrestamos(ContextoSql contexto) => this.contexto = contexto;
-
-    public async Task<Prestamo?> ObtenerPorIdAsync(int id, CancellationToken ct = default)
+    public RepositorioPrestamos(SqlConnection conexion, SqlTransaction transaccion)
     {
-        var lista = await LeerAsync(contexto.Comando($"{Consulta} WHERE Id = @id;").Con("@id", SqlDbType.Int, id), ct);
-        return lista.Count == 0 ? null : lista[0];
+        this.conexion = conexion;
+        this.transaccion = transaccion;
     }
 
-    public async Task<int> ContarActivosDeUsuarioAsync(int usuarioId, CancellationToken ct = default)
+    public async Task<Prestamo?> ObtenerPorIdAsync(int id)
     {
-        await using var comando = contexto.Comando(
-            "SELECT COUNT(*) FROM dbo.Prestamos WHERE UsuarioId = @u AND FechaDevolucion IS NULL;")
-            .Con("@u", SqlDbType.Int, usuarioId);
-        return (int)(await comando.ExecuteScalarAsync(ct))!;
-    }
+        using SqlCommand cmd = new SqlCommand("SELECT * FROM Prestamos WHERE Id = @Id", conexion, transaccion);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
 
-    public Task<IReadOnlyList<Prestamo>> ListarActivosDeUsuarioAsync(int usuarioId, CancellationToken ct = default) =>
-        LeerAsync(
-            contexto.Comando($"{Consulta} WHERE UsuarioId = @u AND FechaDevolucion IS NULL ORDER BY FechaVencimiento;")
-                .Con("@u", SqlDbType.Int, usuarioId),
-            ct);
-
-    public Task<int> AgregarAsync(Prestamo prestamo, CancellationToken ct = default)
-    {
-        var comando = contexto.Comando("""
-            INSERT dbo.Prestamos (UsuarioId, MaterialId, FechaPrestamo, FechaVencimiento, FechaDevolucion, Renovado, RegistradoPorId)
-            OUTPUT INSERTED.Id
-            VALUES (@usuario, @material, @fecha, @vence, @devuelto, @renovado, @registra);
-            """)
-            .Con("@usuario", SqlDbType.Int, prestamo.UsuarioId)
-            .Con("@material", SqlDbType.Int, prestamo.MaterialId)
-            .Con("@fecha", SqlDbType.DateTime2, prestamo.FechaPrestamo)
-            .ConFecha("@vence", prestamo.FechaVencimiento)
-            .Con("@devuelto", SqlDbType.DateTime2, prestamo.FechaDevolucion)
-            .Con("@renovado", SqlDbType.Bit, prestamo.Renovado)
-            .Con("@registra", SqlDbType.Int, prestamo.RegistradoPorId);
-
-        return TraductorErroresSql.EjecutarAsync(async () =>
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
         {
-            await using (comando)
-            {
-                return (int)(await comando.ExecuteScalarAsync(ct))!;
-            }
-        });
-    }
-
-    /// <summary>Lo único que cambia de un préstamo: el vencimiento (renovar) y la devolución.</summary>
-    public Task ActualizarAsync(Prestamo prestamo, CancellationToken ct = default)
-    {
-        var comando = contexto.Comando("""
-            UPDATE dbo.Prestamos SET FechaVencimiento = @vence, FechaDevolucion = @devuelto, Renovado = @renovado
-            WHERE Id = @id;
-            """)
-            .Con("@id", SqlDbType.Int, prestamo.Id)
-            .ConFecha("@vence", prestamo.FechaVencimiento)
-            .Con("@devuelto", SqlDbType.DateTime2, prestamo.FechaDevolucion)
-            .Con("@renovado", SqlDbType.Bit, prestamo.Renovado);
-
-        return TraductorErroresSql.EjecutarAsync(async () =>
-        {
-            await using (comando)
-            {
-                await comando.ExecuteNonQueryAsync(ct);
-            }
-        });
-    }
-
-    private static async Task<IReadOnlyList<Prestamo>> LeerAsync(SqlCommand comando, CancellationToken ct)
-    {
-        await using (comando)
-        {
-            await using var lector = await comando.ExecuteReaderAsync(ct);
-            var lista = new List<Prestamo>();
-            while (await lector.ReadAsync(ct))
-            {
-                lista.Add(new Prestamo(
-                    lector.Entero("Id"),
-                    lector.Entero("UsuarioId"),
-                    lector.Entero("MaterialId"),
-                    lector.Fecha("FechaPrestamo"),
-                    lector.SoloFecha("FechaVencimiento"),
-                    lector.FechaONula("FechaDevolucion"),
-                    lector.Booleano("Renovado"))
-                {
-                    RegistradoPorId = lector.EnteroONulo("RegistradoPorId"),
-                });
-            }
-
-            return lista;
+            return LeerPrestamo(reader);
         }
+
+        return null;
+    }
+
+    // Un préstamo está activo mientras FechaDevolucion sea NULL.
+    public async Task<int> ContarActivosDeUsuarioAsync(int usuarioId)
+    {
+        string sql = "SELECT COUNT(*) FROM Prestamos WHERE UsuarioId = @UsuarioId AND FechaDevolucion IS NULL";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+        return (int)(await cmd.ExecuteScalarAsync())!;
+    }
+
+    public async Task<IReadOnlyList<Prestamo>> ListarActivosDeUsuarioAsync(int usuarioId)
+    {
+        string sql = "SELECT * FROM Prestamos WHERE UsuarioId = @UsuarioId AND FechaDevolucion IS NULL ORDER BY FechaVencimiento";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+        List<Prestamo> lista = new List<Prestamo>();
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            lista.Add(LeerPrestamo(reader));
+        }
+
+        return lista;
+    }
+
+    public async Task<int> AgregarAsync(Prestamo prestamo)
+    {
+        string sql = "INSERT INTO Prestamos (UsuarioId, MaterialId, FechaPrestamo, FechaVencimiento, FechaDevolucion, Renovado, RegistradoPorId) " +
+                     "OUTPUT INSERTED.Id " +
+                     "VALUES (@UsuarioId, @MaterialId, @FechaPrestamo, @FechaVencimiento, @FechaDevolucion, @Renovado, @RegistradoPorId)";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = prestamo.UsuarioId;
+        cmd.Parameters.Add("@MaterialId", SqlDbType.Int).Value = prestamo.MaterialId;
+        cmd.Parameters.Add("@FechaPrestamo", SqlDbType.DateTime2).Value = prestamo.FechaPrestamo;
+        cmd.Parameters.Add("@FechaVencimiento", SqlDbType.Date).Value = prestamo.FechaVencimiento.ToDateTime(TimeOnly.MinValue);
+        cmd.Parameters.Add("@FechaDevolucion", SqlDbType.DateTime2).Value = (object?)prestamo.FechaDevolucion ?? DBNull.Value;
+        cmd.Parameters.Add("@Renovado", SqlDbType.Bit).Value = prestamo.Renovado;
+        cmd.Parameters.Add("@RegistradoPorId", SqlDbType.Int).Value = (object?)prestamo.RegistradoPorId ?? DBNull.Value;
+        return (int)(await cmd.ExecuteScalarAsync())!;
+    }
+
+    // Lo único que cambia de un préstamo es el vencimiento (al renovar) y la devolución.
+    public async Task ActualizarAsync(Prestamo prestamo)
+    {
+        string sql = "UPDATE Prestamos SET FechaVencimiento = @FechaVencimiento, FechaDevolucion = @FechaDevolucion, " +
+                     "Renovado = @Renovado WHERE Id = @Id";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = prestamo.Id;
+        cmd.Parameters.Add("@FechaVencimiento", SqlDbType.Date).Value = prestamo.FechaVencimiento.ToDateTime(TimeOnly.MinValue);
+        cmd.Parameters.Add("@FechaDevolucion", SqlDbType.DateTime2).Value = (object?)prestamo.FechaDevolucion ?? DBNull.Value;
+        cmd.Parameters.Add("@Renovado", SqlDbType.Bit).Value = prestamo.Renovado;
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static Prestamo LeerPrestamo(SqlDataReader reader)
+    {
+        Prestamo prestamo = new Prestamo(
+            (int)reader["Id"],
+            (int)reader["UsuarioId"],
+            (int)reader["MaterialId"],
+            (DateTime)reader["FechaPrestamo"],
+            DateOnly.FromDateTime((DateTime)reader["FechaVencimiento"]),
+            reader["FechaDevolucion"] as DateTime?,
+            (bool)reader["Renovado"])
+        {
+            RegistradoPorId = reader["RegistradoPorId"] as int?,
+        };
+
+        return prestamo;
     }
 }

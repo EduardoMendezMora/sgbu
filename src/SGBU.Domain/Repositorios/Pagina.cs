@@ -1,12 +1,36 @@
 namespace SGBU.Domain.Repositorios;
 
-/// <summary>
-/// Resultado de una consulta paginada del lado del servidor: SQL Server devuelve solo la
-/// página pedida (OFFSET/FETCH) y el total, en vez de traer miles de filas a la aplicación.
-/// </summary>
-public sealed record Pagina<T>(IReadOnlyList<T> Elementos, int NumeroPagina, int TamanoPagina, int Total)
+// Resultado de una búsqueda paginada: los elementos de una página y el total de registros.
+public class Pagina<T>
 {
-    public int TotalPaginas => TamanoPagina <= 0 ? 0 : (int)Math.Ceiling(Total / (double)TamanoPagina);
+    public Pagina(IReadOnlyList<T> elementos, int numeroPagina, int tamanoPagina, int total)
+    {
+        Elementos = elementos;
+        NumeroPagina = numeroPagina;
+        TamanoPagina = tamanoPagina;
+        Total = total;
+    }
+
+    public IReadOnlyList<T> Elementos { get; }
+
+    public int NumeroPagina { get; }
+
+    public int TamanoPagina { get; }
+
+    public int Total { get; }
+
+    public int TotalPaginas
+    {
+        get
+        {
+            if (TamanoPagina <= 0)
+            {
+                return 0;
+            }
+
+            return (int)Math.Ceiling(Total / (double)TamanoPagina);
+        }
+    }
 
     public bool HayAnterior => NumeroPagina > 1;
 

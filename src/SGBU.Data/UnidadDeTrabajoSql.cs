@@ -1,36 +1,28 @@
 using Microsoft.Data.SqlClient;
-using SGBU.Data.Infraestructura;
 using SGBU.Data.Repositorios;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data;
 
-/// <summary>
-/// Unit of Work con ADO.NET: UNA conexión y UNA transacción compartidas por todos los
-/// repositorios. Se usa así:
-/// <code>
-/// await using var uow = await fabrica.CrearAsync();
-/// ... trabajar con uow.Materiales, uow.Prestamos, uow.Auditoria ...
-/// await uow.ConfirmarAsync();   // si no se llega aquí, todo se revierte solo
-/// </code>
-/// Si ocurre una excepción antes de ConfirmarAsync, el DisposeAsync revierte. Así nunca
-/// queda un préstamo guardado sin que haya bajado el stock, o al revés.
-/// </summary>
-public sealed class UnidadDeTrabajoSql : IUnidadDeTrabajo
+// Unit of Work: una sola conexión y una sola transacción para todos los repositorios.
+// Si no se llama a ConfirmarAsync, al cerrar se deshace todo (rollback).
+public class UnidadDeTrabajoSql : IUnidadDeTrabajo
 {
     private readonly SqlConnection conexion;
-    private readonly ContextoSql contexto;
+    private readonly SqlTransaction transaccion;
+    private bool terminada;
 
     private UnidadDeTrabajoSql(SqlConnection conexion, SqlTransaction transaccion)
     {
         this.conexion = conexion;
-        contexto = new ContextoSql(conexion, transaccion);
-        Materiales = new RepositorioMateriales(contexto);
-        Usuarios = new RepositorioUsuarios(contexto);
-        Prestamos = new RepositorioPrestamos(contexto);
-        Multas = new RepositorioMultas(contexto);
-        Reservas = new RepositorioReservas(contexto);
-        Auditoria = new RepositorioAuditoria(contexto);
+        this.transaccion = transaccion;
+
+        Materiales = new RepositorioMateriales(conexion, transaccion);
+        Usuarios = new RepositorioUsuarios(conexion, transaccion);
+        Prestamos = new RepositorioPrestamos(conexion, transaccion);
+        Multas = new RepositorioMultas(conexion, transaccion);
+        Reservas = new RepositorioReservas(conexion, transaccion);
+        Auditoria = new RepositorioAuditoria(conexion, transaccion);
     }
 
     public IRepositorioMateriales Materiales { get; }
@@ -45,56 +37,45 @@ public sealed class UnidadDeTrabajoSql : IUnidadDeTrabajo
 
     public IRepositorioAuditoria Auditoria { get; }
 
-    public static async Task<UnidadDeTrabajoSql> AbrirAsync(string cadenaConexion, CancellationToken ct = default)
+    // Abre la conexión y empieza la transacción.
+    public static async Task<UnidadDeTrabajoSql> AbrirAsync(string cadenaConexion)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(cadenaConexion);
-        var conexion = new SqlConnection(cadenaConexion);
-        try
-        {
-            await conexion.OpenAsync(ct);
-            var transaccion = (SqlTransaction)await conexion.BeginTransactionAsync(ct);
-            return new UnidadDeTrabajoSql(conexion, transaccion);
-        }
-        catch
-        {
-            await conexion.DisposeAsync();
-            throw;
-        }
+        SqlConnection conexion = new SqlConnection(cadenaConexion);
+        await conexion.OpenAsync();
+        SqlTransaction transaccion = conexion.BeginTransaction();
+        return new UnidadDeTrabajoSql(conexion, transaccion);
     }
 
-    public async Task ConfirmarAsync(CancellationToken ct = default)
+    public async Task ConfirmarAsync()
     {
-        var transaccion = TerminarTransaccion();
-        await using (transaccion)
+        if (terminada)
         {
-            await transaccion.CommitAsync(ct);
+            throw new InvalidOperationException("La transacción ya terminó.");
         }
+
+        await transaccion.CommitAsync();
+        terminada = true;
     }
 
-    public async Task RevertirAsync(CancellationToken ct = default)
+    public async Task RevertirAsync()
     {
-        var transaccion = TerminarTransaccion();
-        await using (transaccion)
+        if (terminada)
         {
-            await transaccion.RollbackAsync(ct);
+            throw new InvalidOperationException("La transacción ya terminó.");
         }
+
+        await transaccion.RollbackAsync();
+        terminada = true;
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (contexto.Transaccion is not null)
+        if (!terminada)
         {
             await RevertirAsync();
         }
 
+        await transaccion.DisposeAsync();
         await conexion.DisposeAsync();
-    }
-
-    private SqlTransaction TerminarTransaccion()
-    {
-        var transaccion = contexto.Transaccion
-            ?? throw new InvalidOperationException("La transacción ya se confirmó o se revirtió.");
-        contexto.Transaccion = null;
-        return transaccion;
     }
 }

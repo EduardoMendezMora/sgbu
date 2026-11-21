@@ -3,7 +3,7 @@ using SGBU.Domain.Excepciones;
 namespace SGBU.Domain.Entidades;
 
 /// <summary>Un usuario aparta un material que hoy no está disponible.</summary>
-public sealed class Reserva
+public class Reserva
 {
     public Reserva(int id, int usuarioId, int materialId, DateTime fechaReserva, EstadoReserva estado)
     {

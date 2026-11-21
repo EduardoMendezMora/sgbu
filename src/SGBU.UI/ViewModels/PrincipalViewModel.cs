@@ -6,49 +6,64 @@ using SGBU.UI.Navegacion;
 
 namespace SGBU.UI.ViewModels;
 
-/// <summary>
-/// Ventana principal: muestra solo las opciones que el rol del usuario puede usar.
-/// Las pantallas de cada opción llegan en los pasos 6 a 10.
-/// </summary>
-public sealed partial class PrincipalViewModel : ObservableObject
+public partial class PrincipalViewModel : ObservableObject
 {
-    private static readonly OpcionMenu[] TodasLasOpciones =
-    [
-        new("Catálogo", Permiso.VerCatalogo),
-        new("Mis préstamos", Permiso.VerMisPrestamos),
-        new("Préstamos y devoluciones", Permiso.RegistrarPrestamos),
-        new("Usuarios", Permiso.GestionarUsuarios),
-        new("Multas", Permiso.GestionarMultas),
-        new("Reportes", Permiso.VerReportes),
-        new("Auditoría", Permiso.VerAuditoria),
-        new("Configuración", Permiso.Configurar),
-    ];
-
     private readonly IServicioVentanas ventanas;
 
     [ObservableProperty]
     private OpcionMenu? opcionSeleccionada;
 
+    [ObservableProperty]
+    private string contenido = string.Empty;
+
     public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas)
     {
-        Sesion = sesion;
         this.ventanas = ventanas;
-        Opciones = new ObservableCollection<OpcionMenu>(TodasLasOpciones.Where(o => sesion.Puede(o.Permiso)));
-        OpcionSeleccionada = Opciones.FirstOrDefault();
+        Sesion = sesion;
+        Bienvenida = "Bienvenido(a), " + sesion.NombreCompleto;
+
+        // Solo se agregan al menú las opciones que el rol puede usar.
+        Opciones = new ObservableCollection<OpcionMenu>();
+        AgregarSiPuede("Catálogo", Permiso.VerCatalogo);
+        AgregarSiPuede("Mis préstamos", Permiso.VerMisPrestamos);
+        AgregarSiPuede("Préstamos y devoluciones", Permiso.RegistrarPrestamos);
+        AgregarSiPuede("Usuarios", Permiso.GestionarUsuarios);
+        AgregarSiPuede("Multas", Permiso.GestionarMultas);
+        AgregarSiPuede("Reportes", Permiso.VerReportes);
+        AgregarSiPuede("Auditoría", Permiso.VerAuditoria);
+        AgregarSiPuede("Configuración", Permiso.Configurar);
     }
 
     public Sesion Sesion { get; }
 
-    public string Bienvenida => $"Bienvenido(a), {Sesion.NombreCompleto}";
+    public string Bienvenida { get; }
 
     public ObservableCollection<OpcionMenu> Opciones { get; }
 
-    public string Contenido => OpcionSeleccionada is null
-        ? string.Empty
-        : $"{OpcionSeleccionada.Titulo}: esta pantalla se construye en los próximos pasos.";
-
-    partial void OnOpcionSeleccionadaChanged(OpcionMenu? value) => OnPropertyChanged(nameof(Contenido));
+    // Se ejecuta solo cada vez que cambia la opción seleccionada.
+    partial void OnOpcionSeleccionadaChanged(OpcionMenu? value)
+    {
+        if (value == null)
+        {
+            Contenido = string.Empty;
+        }
+        else
+        {
+            Contenido = value.Titulo + ": pantalla en construcción.";
+        }
+    }
 
     [RelayCommand]
-    private void CerrarSesion() => ventanas.CerrarSesion();
+    private void CerrarSesion()
+    {
+        ventanas.CerrarSesion();
+    }
+
+    private void AgregarSiPuede(string titulo, Permiso permiso)
+    {
+        if (Sesion.Puede(permiso))
+        {
+            Opciones.Add(new OpcionMenu(titulo, permiso));
+        }
+    }
 }

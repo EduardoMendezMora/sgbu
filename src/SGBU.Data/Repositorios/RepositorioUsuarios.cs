@@ -1,140 +1,170 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
-using SGBU.Data.Infraestructura;
 using SGBU.Domain.Entidades;
+using SGBU.Domain.Excepciones;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data.Repositorios;
 
-/// <summary>Usuarios con su rol (JOIN a Roles: el rol trae los límites de préstamo).</summary>
-internal sealed class RepositorioUsuarios : IRepositorioUsuarios
+public class RepositorioUsuarios : IRepositorioUsuarios
 {
-    private const string Consulta = """
-        SELECT u.Id, u.Carne, u.Dni, u.Nombre, u.Apellidos, u.Email, u.Telefono, u.PasswordHash, u.Activo,
-               u.FechaRegistro, r.Id AS RolId, r.Nombre AS RolNombre, r.LimitePrestamos, r.DiasPrestamo
-        FROM dbo.Usuarios u
-        JOIN dbo.Roles r ON r.Id = u.RolId
-        """;
+    // Se une con Roles porque el usuario necesita los datos de su rol.
+    private const string SelectUsuarios =
+        "SELECT u.*, r.Nombre AS RolNombre, r.LimitePrestamos, r.DiasPrestamo " +
+        "FROM Usuarios u INNER JOIN Roles r ON r.Id = u.RolId";
 
-    private const string Filtro = """
-        WHERE (@patron IS NULL OR u.Carne LIKE @patron ESCAPE '\' OR u.Nombre LIKE @patron ESCAPE '\'
-            OR u.Apellidos LIKE @patron ESCAPE '\' OR u.Email LIKE @patron ESCAPE '\')
-        """;
+    private readonly SqlConnection conexion;
+    private readonly SqlTransaction transaccion;
 
-    private readonly ContextoSql contexto;
-
-    public RepositorioUsuarios(ContextoSql contexto) => this.contexto = contexto;
-
-    public Task<Usuario?> ObtenerPorIdAsync(int id, CancellationToken ct = default) =>
-        LeerUnoAsync(contexto.Comando($"{Consulta} WHERE u.Id = @v;").Con("@v", SqlDbType.Int, id), ct);
-
-    public Task<Usuario?> ObtenerPorCarneAsync(string carne, CancellationToken ct = default) =>
-        LeerUnoAsync(contexto.Comando($"{Consulta} WHERE u.Carne = @v;").Con("@v", SqlDbType.NVarChar, carne.Trim(), 20), ct);
-
-    public Task<Usuario?> ObtenerPorEmailAsync(string email, CancellationToken ct = default) =>
-        LeerUnoAsync(contexto.Comando($"{Consulta} WHERE u.Email = @v;").Con("@v", SqlDbType.NVarChar, email.Trim(), 120), ct);
-
-    public async Task<Pagina<Usuario>> BuscarAsync(string? texto, int numeroPagina, int tamanoPagina, CancellationToken ct = default)
+    public RepositorioUsuarios(SqlConnection conexion, SqlTransaction transaccion)
     {
-        var saltar = ExtensionesSql.Saltar(numeroPagina, tamanoPagina);
-        await using var comando = contexto.Comando($"""
-            SELECT COUNT(*) FROM dbo.Usuarios u {Filtro};
-            {Consulta} {Filtro}
-            ORDER BY u.Apellidos, u.Nombre, u.Id OFFSET @saltar ROWS FETCH NEXT @tamano ROWS ONLY;
-            """)
-            .Con("@patron", SqlDbType.NVarChar, ExtensionesSql.PatronContiene(texto), 130)
-            .Con("@saltar", SqlDbType.Int, saltar)
-            .Con("@tamano", SqlDbType.Int, tamanoPagina);
+        this.conexion = conexion;
+        this.transaccion = transaccion;
+    }
 
-        await using var lector = await comando.ExecuteReaderAsync(ct);
-        await lector.ReadAsync(ct);
-        var total = lector.GetInt32(0);
+    public async Task<Usuario?> ObtenerPorIdAsync(int id)
+    {
+        using SqlCommand cmd = new SqlCommand(SelectUsuarios + " WHERE u.Id = @Id", conexion, transaccion);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
+        return await LeerUnoAsync(cmd);
+    }
 
-        await lector.NextResultAsync(ct);
-        var elementos = new List<Usuario>();
-        while (await lector.ReadAsync(ct))
+    public async Task<Usuario?> ObtenerPorCarneAsync(string carne)
+    {
+        using SqlCommand cmd = new SqlCommand(SelectUsuarios + " WHERE u.Carne = @Carne", conexion, transaccion);
+        cmd.Parameters.Add("@Carne", SqlDbType.NVarChar, 20).Value = carne.Trim();
+        return await LeerUnoAsync(cmd);
+    }
+
+    public async Task<Usuario?> ObtenerPorEmailAsync(string email)
+    {
+        using SqlCommand cmd = new SqlCommand(SelectUsuarios + " WHERE u.Email = @Email", conexion, transaccion);
+        cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 120).Value = email.Trim();
+        return await LeerUnoAsync(cmd);
+    }
+
+    public async Task<Pagina<Usuario>> BuscarAsync(string? texto, int numeroPagina, int tamanoPagina)
+    {
+        string filtro = " WHERE (@Texto IS NULL OR u.Carne LIKE @Texto OR u.Nombre LIKE @Texto " +
+                        "OR u.Apellidos LIKE @Texto OR u.Email LIKE @Texto)";
+        object valorTexto = string.IsNullOrWhiteSpace(texto) ? DBNull.Value : "%" + texto.Trim() + "%";
+
+        using SqlCommand cmdTotal = new SqlCommand("SELECT COUNT(*) FROM Usuarios u" + filtro, conexion, transaccion);
+        cmdTotal.Parameters.Add("@Texto", SqlDbType.NVarChar, 130).Value = valorTexto;
+        int total = (int)(await cmdTotal.ExecuteScalarAsync())!;
+
+        string sql = SelectUsuarios + filtro + " ORDER BY u.Apellidos, u.Nombre OFFSET @Saltar ROWS FETCH NEXT @Tamano ROWS ONLY";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@Texto", SqlDbType.NVarChar, 130).Value = valorTexto;
+        cmd.Parameters.Add("@Saltar", SqlDbType.Int).Value = (numeroPagina - 1) * tamanoPagina;
+        cmd.Parameters.Add("@Tamano", SqlDbType.Int).Value = tamanoPagina;
+
+        List<Usuario> lista = new List<Usuario>();
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
         {
-            elementos.Add(Mapear(lector));
+            lista.Add(LeerUsuario(reader));
         }
 
-        return new Pagina<Usuario>(elementos, numeroPagina, tamanoPagina, total);
+        return new Pagina<Usuario>(lista, numeroPagina, tamanoPagina, total);
     }
 
-    public Task<int> AgregarAsync(Usuario usuario, CancellationToken ct = default)
+    public async Task<int> AgregarAsync(Usuario usuario)
     {
-        var comando = contexto.Comando("""
-            INSERT dbo.Usuarios (Carne, Dni, Nombre, Apellidos, Email, Telefono, RolId, PasswordHash, Activo)
-            OUTPUT INSERTED.Id
-            VALUES (@carne, @dni, @nombre, @apellidos, @email, @telefono, @rol, @hash, @activo);
-            """);
-        AgregarParametros(comando, usuario);
+        string sql = "INSERT INTO Usuarios (Carne, Dni, Nombre, Apellidos, Email, Telefono, RolId, PasswordHash, Activo) " +
+                     "OUTPUT INSERTED.Id " +
+                     "VALUES (@Carne, @Dni, @Nombre, @Apellidos, @Email, @Telefono, @RolId, @PasswordHash, @Activo)";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        AgregarParametros(cmd, usuario);
 
-        return TraductorErroresSql.EjecutarAsync(async () =>
+        try
         {
-            await using (comando)
-            {
-                return (int)(await comando.ExecuteScalarAsync(ct))!;
-            }
-        });
-    }
-
-    public Task ActualizarAsync(Usuario usuario, CancellationToken ct = default)
-    {
-        var comando = contexto.Comando("""
-            UPDATE dbo.Usuarios SET Carne = @carne, Dni = @dni, Nombre = @nombre, Apellidos = @apellidos,
-                Email = @email, Telefono = @telefono, RolId = @rol, PasswordHash = @hash, Activo = @activo
-            WHERE Id = @id;
-            """).Con("@id", SqlDbType.Int, usuario.Id);
-        AgregarParametros(comando, usuario);
-
-        return TraductorErroresSql.EjecutarAsync(async () =>
+            return (int)(await cmd.ExecuteScalarAsync())!;
+        }
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
         {
-            await using (comando)
-            {
-                await comando.ExecuteNonQueryAsync(ct);
-            }
-        });
-    }
-
-    private static void AgregarParametros(SqlCommand comando, Usuario u) =>
-        comando
-            .Con("@carne", SqlDbType.NVarChar, u.Carne, 20)
-            .Con("@dni", SqlDbType.NVarChar, u.Dni, 20)
-            .Con("@nombre", SqlDbType.NVarChar, u.Nombre, 60)
-            .Con("@apellidos", SqlDbType.NVarChar, u.Apellidos, 80)
-            .Con("@email", SqlDbType.NVarChar, u.Email, 120)
-            .Con("@telefono", SqlDbType.NVarChar, u.Telefono, 20)
-            .Con("@rol", SqlDbType.Int, u.Rol.Id)
-            .Con("@hash", SqlDbType.Char, u.PasswordHash, 60)
-            .Con("@activo", SqlDbType.Bit, u.Activo);
-
-    private static async Task<Usuario?> LeerUnoAsync(SqlCommand comando, CancellationToken ct)
-    {
-        await using (comando)
-        {
-            await using var lector = await comando.ExecuteReaderAsync(ct);
-            return await lector.ReadAsync(ct) ? Mapear(lector) : null;
+            throw new DatoInvalidoException(MensajeDuplicado(ex));
         }
     }
 
-    private static Usuario Mapear(SqlDataReader r)
+    public async Task ActualizarAsync(Usuario usuario)
     {
-        var rol = new Rol(r.Entero("RolId"), r.Texto("RolNombre"), r.Entero("LimitePrestamos"), r.Entero("DiasPrestamo"));
-        var usuario = new Usuario(
-            r.Texto("Carne"),
-            r.Texto("Dni"),
-            r.Texto("Nombre"),
-            r.Texto("Apellidos"),
-            r.Texto("Email"),
-            r.TextoONulo("Telefono"),
+        string sql = "UPDATE Usuarios SET Carne = @Carne, Dni = @Dni, Nombre = @Nombre, Apellidos = @Apellidos, " +
+                     "Email = @Email, Telefono = @Telefono, RolId = @RolId, PasswordHash = @PasswordHash, Activo = @Activo " +
+                     "WHERE Id = @Id";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        AgregarParametros(cmd, usuario);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = usuario.Id;
+
+        try
+        {
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        {
+            throw new DatoInvalidoException(MensajeDuplicado(ex));
+        }
+    }
+
+    // El mensaje de SQL Server trae el nombre de la restricción que se rompió.
+    private static string MensajeDuplicado(SqlException ex)
+    {
+        if (ex.Message.Contains("UQ_Usuarios_Email"))
+        {
+            return "Ya existe un usuario con ese email.";
+        }
+
+        if (ex.Message.Contains("UQ_Usuarios_Dni"))
+        {
+            return "Ya existe un usuario con ese DNI.";
+        }
+
+        return "Ya existe un usuario con ese carné.";
+    }
+
+    private static void AgregarParametros(SqlCommand cmd, Usuario u)
+    {
+        cmd.Parameters.Add("@Carne", SqlDbType.NVarChar, 20).Value = u.Carne;
+        cmd.Parameters.Add("@Dni", SqlDbType.NVarChar, 20).Value = u.Dni;
+        cmd.Parameters.Add("@Nombre", SqlDbType.NVarChar, 60).Value = u.Nombre;
+        cmd.Parameters.Add("@Apellidos", SqlDbType.NVarChar, 80).Value = u.Apellidos;
+        cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 120).Value = u.Email;
+        cmd.Parameters.Add("@Telefono", SqlDbType.NVarChar, 20).Value = (object?)u.Telefono ?? DBNull.Value;
+        cmd.Parameters.Add("@RolId", SqlDbType.Int).Value = u.Rol.Id;
+        cmd.Parameters.Add("@PasswordHash", SqlDbType.Char, 60).Value = u.PasswordHash;
+        cmd.Parameters.Add("@Activo", SqlDbType.Bit).Value = u.Activo;
+    }
+
+    private static async Task<Usuario?> LeerUnoAsync(SqlCommand cmd)
+    {
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return LeerUsuario(reader);
+        }
+
+        return null;
+    }
+
+    private static Usuario LeerUsuario(SqlDataReader reader)
+    {
+        Rol rol = new Rol((int)reader["RolId"], (string)reader["RolNombre"], (int)reader["LimitePrestamos"], (int)reader["DiasPrestamo"]);
+
+        Usuario usuario = new Usuario(
+            (string)reader["Carne"],
+            (string)reader["Dni"],
+            (string)reader["Nombre"],
+            (string)reader["Apellidos"],
+            (string)reader["Email"],
+            reader["Telefono"] as string,
             rol,
-            r.Texto("PasswordHash"))
+            (string)reader["PasswordHash"])
         {
-            Id = r.Entero("Id"),
-            FechaRegistro = r.Fecha("FechaRegistro"),
+            Id = (int)reader["Id"],
+            FechaRegistro = (DateTime)reader["FechaRegistro"],
         };
 
-        if (!r.Booleano("Activo"))
+        if (!(bool)reader["Activo"])
         {
             usuario.Desactivar();
         }

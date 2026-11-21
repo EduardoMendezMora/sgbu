@@ -1,55 +1,37 @@
 using System.Windows;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using SGBU.Data;
-using SGBU.Domain.Repositorios;
-using SGBU.Services.Comun;
 using SGBU.Services.Seguridad;
 using SGBU.UI.Navegacion;
-using SGBU.UI.ViewModels;
-using SGBU.UI.Views;
 
 namespace SGBU.UI;
 
-/// <summary>
-/// Punto de entrada. Aquí, y solo aquí, se arma la inyección de dependencias ("composition
-/// root"): es el único lugar que conoce las clases concretas de todas las capas. El resto
-/// del programa pide interfaces por el constructor.
-/// </summary>
 public partial class App : Application
 {
-    private ServiceProvider? proveedor;
-
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        // Orden de prioridad: variable de entorno SGBU_CONN > appsettings.Local.json > appsettings.json.
-        var configuracion = new ConfigurationBuilder()
+        // Se lee la cadena de conexión de appsettings.json (o de appsettings.Local.json si existe).
+        IConfiguration configuracion = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false)
             .AddJsonFile("appsettings.Local.json", optional: true)
             .Build();
-        var cadena = Environment.GetEnvironmentVariable("SGBU_CONN")
-            ?? configuracion.GetConnectionString("Sgbu")
-            ?? throw new InvalidOperationException("Falta la cadena de conexión 'Sgbu' en appsettings.json.");
 
-        var servicios = new ServiceCollection();
-        servicios.AddSingleton<IFabricaUnidadDeTrabajo>(new FabricaUnidadDeTrabajoSql(cadena));
-        servicios.AddSingleton<IReloj, RelojSistema>();
-        servicios.AddSingleton<IHasherContrasenas, HasherBCrypt>();
-        servicios.AddTransient<ServicioAutenticacion>();
-        servicios.AddSingleton<IServicioVentanas, ServicioVentanas>();
-        servicios.AddTransient<LoginViewModel>();
-        servicios.AddTransient<LoginWindow>();
-        proveedor = servicios.BuildServiceProvider();
+        string? cadena = configuracion.GetConnectionString("Sgbu");
+        if (string.IsNullOrWhiteSpace(cadena))
+        {
+            MessageBox.Show("Falta la cadena de conexión en appsettings.json.", "SGBU");
+            Shutdown();
+            return;
+        }
 
-        proveedor.GetRequiredService<IServicioVentanas>().MostrarLogin();
-    }
+        // Aquí se crean los objetos y se le pasa a cada uno lo que necesita.
+        FabricaUnidadDeTrabajoSql fabrica = new FabricaUnidadDeTrabajoSql(cadena);
+        ServicioAutenticacion autenticacion = new ServicioAutenticacion(fabrica, new HasherBCrypt());
 
-    protected override void OnExit(ExitEventArgs e)
-    {
-        proveedor?.Dispose();
-        base.OnExit(e);
+        ServicioVentanas ventanas = new ServicioVentanas(autenticacion);
+        ventanas.MostrarLogin();
     }
 }

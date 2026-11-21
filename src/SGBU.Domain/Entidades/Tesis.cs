@@ -2,7 +2,7 @@ using SGBU.Domain.Reglas;
 
 namespace SGBU.Domain.Entidades;
 
-public sealed class Tesis : Material
+public class Tesis : Material
 {
     public Tesis(string isbn, string titulo, string autor, int stockTotal, string universidad, string? gradoAcademico, string? tutor)
         : this(0, isbn, titulo, autor, stockTotal, stockTotal, universidad, gradoAcademico, tutor)

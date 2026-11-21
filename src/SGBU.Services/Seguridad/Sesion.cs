@@ -1,19 +1,42 @@
 namespace SGBU.Services.Seguridad;
 
-/// <summary>
-/// El usuario que inició sesión. Los permisos por rol viven aquí, en un solo lugar:
-/// la UI pregunta sesion.Puede(Permiso.X) para mostrar u ocultar opciones, y los
-/// servicios lo vuelven a revisar antes de cada operación (nunca confiar solo en la UI).
-/// </summary>
-public sealed record Sesion(int UsuarioId, string NombreCompleto, string Rol, DateTime Inicio)
+// Datos del usuario que inició sesión y qué puede hacer según su rol.
+public class Sesion
 {
-    private static readonly Dictionary<string, HashSet<Permiso>> PermisosPorRol = new(StringComparer.Ordinal)
+    public Sesion(int usuarioId, string nombreCompleto, string rol, DateTime inicio)
     {
-        ["Administrador"] = [.. Enum.GetValues<Permiso>()],
-        ["Profesor"] = [Permiso.VerCatalogo, Permiso.VerMisPrestamos, Permiso.VerReportes],
-        ["Estudiante"] = [Permiso.VerCatalogo, Permiso.VerMisPrestamos],
-    };
+        UsuarioId = usuarioId;
+        NombreCompleto = nombreCompleto;
+        Rol = rol;
+        Inicio = inicio;
+    }
 
-    public bool Puede(Permiso permiso) =>
-        PermisosPorRol.TryGetValue(Rol, out var permisos) && permisos.Contains(permiso);
+    public int UsuarioId { get; }
+
+    public string NombreCompleto { get; }
+
+    public string Rol { get; }
+
+    public DateTime Inicio { get; }
+
+    public bool Puede(Permiso permiso)
+    {
+        switch (Rol)
+        {
+            case "Administrador":
+                return true;
+
+            case "Profesor":
+                return permiso == Permiso.VerCatalogo
+                    || permiso == Permiso.VerMisPrestamos
+                    || permiso == Permiso.VerReportes;
+
+            case "Estudiante":
+                return permiso == Permiso.VerCatalogo
+                    || permiso == Permiso.VerMisPrestamos;
+
+            default:
+                return false;
+        }
+    }
 }

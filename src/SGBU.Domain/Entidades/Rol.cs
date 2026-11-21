@@ -3,7 +3,7 @@ using SGBU.Domain.Reglas;
 namespace SGBU.Domain.Entidades;
 
 /// <summary>Administrador, Profesor o Estudiante, con sus límites (tabla Roles).</summary>
-public sealed class Rol
+public class Rol
 {
     public Rol(int id, string nombre, int limitePrestamos, int diasPrestamo)
     {

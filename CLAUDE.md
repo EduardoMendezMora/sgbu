@@ -13,6 +13,11 @@ Entrega final: semana 13 del curso (el trabajo empezó en la semana 10).
   stored procedure) la escribe Eduardo con guía; las repetitivas las escribe Claude y explica
   qué cambia.
 - Eduardo suele mandar capturas de pantalla en lugar de describir los errores.
+- **Código y vistas sencillos, de nivel estudiante** (pedido de Eduardo): ADO.NET clásico
+  (`cmd.Parameters.Add(...).Value = x`, `(int)reader["Id"]`, `reader["X"] as string`),
+  `if`/`switch` simples, `List<T>`, comentarios cortos, XAML básico (Grid, StackPanel,
+  DataGrid, sin estilos elaborados). Nada de raw strings, primary constructors, helpers
+  fluidos, `CancellationToken`, contenedor de inyección de dependencias ni trucos avanzados.
 
 ## Tecnologías obligatorias (del enunciado)
 
@@ -92,9 +97,10 @@ dotnet run --project src/SGBU.UI      # solo en Windows
 - [x] 3. Domain: entidades con herencia, excepciones propias, interfaces de repositorio
       (rama `feature/domain`; 90 pruebas, 89 % de cobertura en Domain)
 - [x] 4. Data: repositorios ADO.NET, Unit of Work, transacciones (rama `feature/data`;
-      23 pruebas de integración, 94 % de cobertura en Data)
+      22 pruebas de integración)
 - [x] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM (rama `feature/login`;
-      entra con email o carné, permisos por rol en `Sesion`, LOGIN y LOGIN_FALLIDO auditados).
+      entra con email o carné, permisos por rol en `Sesion`, LOGIN y LOGIN_FALLIDO auditados;
+      código simplificado a nivel estudiante).
       Falta verlo en una PC con Windows: `README.md`, sección "Cómo probarlo en Windows"
 - [ ] 6. Catálogo y Usuarios: CRUD, búsquedas, validaciones, paginación
 - [ ] 7. Préstamos y devoluciones con stored procedures

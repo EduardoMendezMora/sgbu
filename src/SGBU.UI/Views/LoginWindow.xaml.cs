@@ -3,20 +3,19 @@ using SGBU.UI.ViewModels;
 
 namespace SGBU.UI.Views;
 
-/// <summary>
-/// Code-behind mínimo: solo une la vista con su ViewModel y copia la contraseña
-/// (el PasswordBox no admite Binding). Ninguna regla de negocio vive aquí.
-/// </summary>
 public partial class LoginWindow : Window
 {
-    private readonly LoginViewModel viewModel;
-
-    public LoginWindow(LoginViewModel viewModel)
+    public LoginWindow()
     {
         InitializeComponent();
-        this.viewModel = viewModel;
-        DataContext = viewModel;
     }
 
-    private void AlCambiarContrasena(object sender, RoutedEventArgs e) => viewModel.Contrasena = CajaContrasena.Password;
+    // El PasswordBox no se puede enlazar con Binding, así que se copia la clave al ViewModel.
+    private void Contrasena_Cambio(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is LoginViewModel vm)
+        {
+            vm.Contrasena = txtContrasena.Password;
+        }
+    }
 }

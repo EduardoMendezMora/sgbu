@@ -8,7 +8,7 @@ namespace SGBU.Domain.Entidades;
 /// El monto es decimal (nunca double/float): el dinero necesita exactitud, y double guarda
 /// 0.1 como 0.1000000000000000055...
 /// </summary>
-public sealed class Multa
+public class Multa
 {
     public Multa(int id, int prestamoId, int usuarioId, int diasAtraso, decimal monto, EstadoMulta estado, DateTime fechaGeneracion, DateTime? fechaPago)
     {

@@ -1,58 +1,47 @@
 using System.Data;
-using SGBU.Data.Infraestructura;
+using Microsoft.Data.SqlClient;
 using SGBU.Domain.Entidades;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data.Repositorios;
 
-internal sealed class RepositorioReservas : IRepositorioReservas
+public class RepositorioReservas : IRepositorioReservas
 {
-    private readonly ContextoSql contexto;
+    private readonly SqlConnection conexion;
+    private readonly SqlTransaction transaccion;
 
-    public RepositorioReservas(ContextoSql contexto) => this.contexto = contexto;
-
-    public async Task<bool> ExistePendienteAsync(int materialId, CancellationToken ct = default)
+    public RepositorioReservas(SqlConnection conexion, SqlTransaction transaccion)
     {
-        await using var comando = contexto.Comando("""
-            SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.Reservas WHERE MaterialId = @m AND Estado = N'Pendiente')
-                        THEN 1 ELSE 0 END;
-            """).Con("@m", SqlDbType.Int, materialId);
-        return (int)(await comando.ExecuteScalarAsync(ct))! == 1;
+        this.conexion = conexion;
+        this.transaccion = transaccion;
     }
 
-    public Task<int> AgregarAsync(Reserva reserva, CancellationToken ct = default)
+    public async Task<bool> ExistePendienteAsync(int materialId)
     {
-        var comando = contexto.Comando("""
-            INSERT dbo.Reservas (UsuarioId, MaterialId, FechaReserva, Estado)
-            OUTPUT INSERTED.Id
-            VALUES (@usuario, @material, @fecha, @estado);
-            """)
-            .Con("@usuario", SqlDbType.Int, reserva.UsuarioId)
-            .Con("@material", SqlDbType.Int, reserva.MaterialId)
-            .Con("@fecha", SqlDbType.DateTime2, reserva.FechaReserva)
-            .Con("@estado", SqlDbType.NVarChar, reserva.Estado.ToString(), 12);
-
-        return TraductorErroresSql.EjecutarAsync(async () =>
-        {
-            await using (comando)
-            {
-                return (int)(await comando.ExecuteScalarAsync(ct))!;
-            }
-        });
+        string sql = "SELECT COUNT(*) FROM Reservas WHERE MaterialId = @MaterialId AND Estado = 'Pendiente'";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@MaterialId", SqlDbType.Int).Value = materialId;
+        int cantidad = (int)(await cmd.ExecuteScalarAsync())!;
+        return cantidad > 0;
     }
 
-    public Task ActualizarAsync(Reserva reserva, CancellationToken ct = default)
+    public async Task<int> AgregarAsync(Reserva reserva)
     {
-        var comando = contexto.Comando("UPDATE dbo.Reservas SET Estado = @estado WHERE Id = @id;")
-            .Con("@id", SqlDbType.Int, reserva.Id)
-            .Con("@estado", SqlDbType.NVarChar, reserva.Estado.ToString(), 12);
+        string sql = "INSERT INTO Reservas (UsuarioId, MaterialId, FechaReserva, Estado) OUTPUT INSERTED.Id " +
+                     "VALUES (@UsuarioId, @MaterialId, @FechaReserva, @Estado)";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = reserva.UsuarioId;
+        cmd.Parameters.Add("@MaterialId", SqlDbType.Int).Value = reserva.MaterialId;
+        cmd.Parameters.Add("@FechaReserva", SqlDbType.DateTime2).Value = reserva.FechaReserva;
+        cmd.Parameters.Add("@Estado", SqlDbType.NVarChar, 12).Value = reserva.Estado.ToString();
+        return (int)(await cmd.ExecuteScalarAsync())!;
+    }
 
-        return TraductorErroresSql.EjecutarAsync(async () =>
-        {
-            await using (comando)
-            {
-                await comando.ExecuteNonQueryAsync(ct);
-            }
-        });
+    public async Task ActualizarAsync(Reserva reserva)
+    {
+        using SqlCommand cmd = new SqlCommand("UPDATE Reservas SET Estado = @Estado WHERE Id = @Id", conexion, transaccion);
+        cmd.Parameters.Add("@Id", SqlDbType.Int).Value = reserva.Id;
+        cmd.Parameters.Add("@Estado", SqlDbType.NVarChar, 12).Value = reserva.Estado.ToString();
+        await cmd.ExecuteNonQueryAsync();
     }
 }

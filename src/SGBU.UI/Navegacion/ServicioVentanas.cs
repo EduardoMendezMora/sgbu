@@ -1,39 +1,58 @@
 using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
 using SGBU.Services.Seguridad;
 using SGBU.UI.ViewModels;
 using SGBU.UI.Views;
 
 namespace SGBU.UI.Navegacion;
 
-public sealed class ServicioVentanas : IServicioVentanas
+// Abre y cierra las ventanas, para que los ViewModels no tengan que conocer las vistas.
+public class ServicioVentanas : IServicioVentanas
 {
-    private readonly IServiceProvider proveedor;
-    private Window? actual;
+    private readonly ServicioAutenticacion autenticacion;
+    private Window? ventanaActual;
 
-    public ServicioVentanas(IServiceProvider proveedor) => this.proveedor = proveedor;
+    public ServicioVentanas(ServicioAutenticacion autenticacion)
+    {
+        this.autenticacion = autenticacion;
+    }
 
-    public void MostrarLogin() => Cambiar(proveedor.GetRequiredService<LoginWindow>());
+    public void MostrarLogin()
+    {
+        LoginWindow login = new LoginWindow();
+        login.DataContext = new LoginViewModel(autenticacion, this);
+        Cambiar(login);
+    }
 
-    public void MostrarPrincipal(Sesion sesion) =>
-        Cambiar(new PrincipalWindow { DataContext = new PrincipalViewModel(sesion, this) });
+    public void MostrarPrincipal(Sesion sesion)
+    {
+        PrincipalWindow principal = new PrincipalWindow();
+        principal.DataContext = new PrincipalViewModel(sesion, this);
+        Cambiar(principal);
+    }
 
-    public void CerrarSesion() => MostrarLogin();
+    public void CerrarSesion()
+    {
+        MostrarLogin();
+    }
 
+    // Muestra la ventana nueva y cierra la anterior.
     private void Cambiar(Window nueva)
     {
-        var anterior = actual;
-        actual = nueva;
-        nueva.Closed += AlCerrar;
+        Window? anterior = ventanaActual;
+        ventanaActual = nueva;
+        nueva.Closed += AlCerrarVentana;
         nueva.Show();
 
-        if (anterior is not null)
+        if (anterior != null)
         {
-            anterior.Closed -= AlCerrar;
+            anterior.Closed -= AlCerrarVentana;
             anterior.Close();
         }
     }
 
-    // Si el usuario cierra la ventana con la X, se termina la aplicación.
-    private void AlCerrar(object? sender, EventArgs e) => Application.Current.Shutdown();
+    // Si el usuario cierra la ventana con la X, termina el programa.
+    private void AlCerrarVentana(object? sender, EventArgs e)
+    {
+        Application.Current.Shutdown();
+    }
 }

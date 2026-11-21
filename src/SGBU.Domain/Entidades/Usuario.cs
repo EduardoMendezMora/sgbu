@@ -7,7 +7,7 @@ namespace SGBU.Domain.Entidades;
 /// Persona que usa la biblioteca. Valida email, DNI y teléfono al crearse: un Usuario con
 /// datos inválidos no puede existir en memoria, ni hablar de llegar a la base.
 /// </summary>
-public sealed class Usuario
+public class Usuario
 {
     private const int LargoHashBCrypt = 60;
 
