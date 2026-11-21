@@ -12,4 +12,7 @@ public enum Permiso
     VerReportes,
     VerAuditoria,
     Configurar,
+
+    // Tema e idioma: cada usuario elige los suyos.
+    Preferencias,
 }

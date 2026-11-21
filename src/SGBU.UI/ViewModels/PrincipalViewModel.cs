@@ -1,12 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SGBU.Services.Catalogo;
-using SGBU.Services.Multas;
-using SGBU.Services.Prestamos;
-using SGBU.Services.Reportes;
 using SGBU.Services.Seguridad;
-using SGBU.Services.Usuarios;
 using SGBU.UI.Navegacion;
 
 namespace SGBU.UI.ViewModels;
@@ -14,11 +9,7 @@ namespace SGBU.UI.ViewModels;
 public partial class PrincipalViewModel : ObservableObject
 {
     private readonly IServicioVentanas ventanas;
-    private readonly ServicioCatalogo servicioCatalogo;
-    private readonly ServicioUsuarios servicioUsuarios;
-    private readonly ServicioPrestamos servicioPrestamos;
-    private readonly ServicioMultas servicioMultas;
-    private readonly ServicioReportes servicioReportes;
+    private readonly Servicios servicios;
 
     [ObservableProperty]
     private OpcionMenu? opcionSeleccionada;
@@ -28,27 +19,23 @@ public partial class PrincipalViewModel : ObservableObject
     [ObservableProperty]
     private object? vistaActual;
 
-    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios, ServicioPrestamos servicioPrestamos, ServicioMultas servicioMultas, ServicioReportes servicioReportes)
+    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, Servicios servicios)
     {
         this.ventanas = ventanas;
-        this.servicioCatalogo = servicioCatalogo;
-        this.servicioUsuarios = servicioUsuarios;
-        this.servicioPrestamos = servicioPrestamos;
-        this.servicioMultas = servicioMultas;
-        this.servicioReportes = servicioReportes;
+        this.servicios = servicios;
         Sesion = sesion;
-        Bienvenida = "Bienvenido(a), " + sesion.NombreCompleto;
+        Bienvenida = Textos.Texto("T_Bienvenido") + sesion.NombreCompleto;
 
         // Solo se agregan al menú las opciones que el rol puede usar.
         Opciones = new ObservableCollection<OpcionMenu>();
-        AgregarSiPuede("Catálogo", Permiso.VerCatalogo);
-        AgregarSiPuede("Mis préstamos", Permiso.VerMisPrestamos);
-        AgregarSiPuede("Préstamos y devoluciones", Permiso.RegistrarPrestamos);
-        AgregarSiPuede("Usuarios", Permiso.GestionarUsuarios);
-        AgregarSiPuede("Multas", Permiso.GestionarMultas);
-        AgregarSiPuede("Reportes", Permiso.VerReportes);
-        AgregarSiPuede("Auditoría", Permiso.VerAuditoria);
-        AgregarSiPuede("Configuración", Permiso.Configurar);
+        AgregarSiPuede("T_Menu_Catalogo", Permiso.VerCatalogo);
+        AgregarSiPuede("T_Menu_MisPrestamos", Permiso.VerMisPrestamos);
+        AgregarSiPuede("T_Menu_Prestamos", Permiso.RegistrarPrestamos);
+        AgregarSiPuede("T_Menu_Usuarios", Permiso.GestionarUsuarios);
+        AgregarSiPuede("T_Menu_Multas", Permiso.GestionarMultas);
+        AgregarSiPuede("T_Menu_Reportes", Permiso.VerReportes);
+        AgregarSiPuede("T_Menu_Auditoria", Permiso.VerAuditoria);
+        AgregarSiPuede("T_Menu_Configuracion", Permiso.Preferencias);
 
         OpcionSeleccionada = Opciones[0];
     }
@@ -64,34 +51,35 @@ public partial class PrincipalViewModel : ObservableObject
         if (value == null)
         {
             VistaActual = null;
+            return;
         }
-        else if (value.Permiso == Permiso.VerCatalogo)
+
+        switch (value.Permiso)
         {
-            VistaActual = new CatalogoViewModel(servicioCatalogo, Sesion);
-        }
-        else if (value.Permiso == Permiso.VerMisPrestamos)
-        {
-            VistaActual = new MisPrestamosViewModel(servicioPrestamos, servicioMultas, Sesion);
-        }
-        else if (value.Permiso == Permiso.RegistrarPrestamos)
-        {
-            VistaActual = new PrestamosViewModel(servicioPrestamos, Sesion);
-        }
-        else if (value.Permiso == Permiso.GestionarMultas)
-        {
-            VistaActual = new MultasViewModel(servicioMultas, Sesion);
-        }
-        else if (value.Permiso == Permiso.VerReportes)
-        {
-            VistaActual = new ReportesViewModel(servicioReportes, Sesion, ventanas);
-        }
-        else if (value.Permiso == Permiso.GestionarUsuarios)
-        {
-            VistaActual = new UsuariosViewModel(servicioUsuarios, Sesion);
-        }
-        else
-        {
-            VistaActual = value.Titulo + ": pantalla en construcción.";
+            case Permiso.VerCatalogo:
+                VistaActual = new CatalogoViewModel(servicios.Catalogo, Sesion);
+                break;
+            case Permiso.VerMisPrestamos:
+                VistaActual = new MisPrestamosViewModel(servicios.Prestamos, servicios.Multas, Sesion);
+                break;
+            case Permiso.RegistrarPrestamos:
+                VistaActual = new PrestamosViewModel(servicios.Prestamos, Sesion);
+                break;
+            case Permiso.GestionarUsuarios:
+                VistaActual = new UsuariosViewModel(servicios.Usuarios, Sesion);
+                break;
+            case Permiso.GestionarMultas:
+                VistaActual = new MultasViewModel(servicios.Multas, Sesion);
+                break;
+            case Permiso.VerReportes:
+                VistaActual = new ReportesViewModel(servicios.Reportes, Sesion, ventanas);
+                break;
+            case Permiso.VerAuditoria:
+                VistaActual = new AuditoriaViewModel(servicios.Auditoria, Sesion);
+                break;
+            default:
+                VistaActual = new ConfiguracionViewModel(Sesion, ventanas);
+                break;
         }
     }
 
@@ -101,11 +89,11 @@ public partial class PrincipalViewModel : ObservableObject
         ventanas.CerrarSesion();
     }
 
-    private void AgregarSiPuede(string titulo, Permiso permiso)
+    private void AgregarSiPuede(string claveTitulo, Permiso permiso)
     {
         if (Sesion.Puede(permiso))
         {
-            Opciones.Add(new OpcionMenu(titulo, permiso));
+            Opciones.Add(new OpcionMenu(Textos.Texto(claveTitulo), permiso));
         }
     }
 }

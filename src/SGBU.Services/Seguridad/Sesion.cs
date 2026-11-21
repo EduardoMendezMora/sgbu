@@ -29,11 +29,13 @@ public class Sesion
             case "Profesor":
                 return permiso == Permiso.VerCatalogo
                     || permiso == Permiso.VerMisPrestamos
-                    || permiso == Permiso.VerReportes;
+                    || permiso == Permiso.VerReportes
+                    || permiso == Permiso.Preferencias;
 
             case "Estudiante":
                 return permiso == Permiso.VerCatalogo
-                    || permiso == Permiso.VerMisPrestamos;
+                    || permiso == Permiso.VerMisPrestamos
+                    || permiso == Permiso.Preferencias;
 
             default:
                 return false;

@@ -113,7 +113,9 @@ dotnet run --project src/SGBU.UI      # solo en Windows
 - [x] 9. Reportes (PDF, Excel, gráficos) y respaldo XML (rama `feature/reportes`; consultas
       con DataTable, Exportador con QuestPDF y EPPlus, gráfico de barras con LiveCharts2,
       respaldo con DataSet.WriteXml sin contraseñas)
-- [ ] 10. Configuración (tema, idioma ES/EN) y auditoría
+- [x] 10. Configuración (tema, idioma ES/EN) y auditoría (rama `feature/configuracion-auditoria`;
+      Temas/Claro|Oscuro.xaml, Idiomas/es|en.xaml con StaticResource, preferencias en
+      %AppData%\SGBU\configuracion.json; pantalla Auditoría con filtros y paginación)
 - [ ] 11. Instalador (MSI o ClickOnce), manuales, diccionario de datos, CHANGELOG
 - [ ] 12. Exposición de 20 minutos
 

@@ -16,11 +16,11 @@
 
     <!-- Elegir reporte y exportar -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-      <Label Content="Reporte:" />
+      <Label Content="{StaticResource T_Reporte}" />
       <ComboBox x:Name="cmbReporte" ItemsSource="{Binding Reportes}" SelectedItem="{Binding ReporteSeleccionado}" Width="280" />
-      <Button Content="Exportar a PDF" Command="{Binding ExportarPdfCommand}" Margin="10,0,0,0" Padding="10,0" />
-      <Button Content="Exportar a Excel" Command="{Binding ExportarExcelCommand}" Margin="10,0,0,0" Padding="10,0" />
-      <Button Content="Respaldo XML" Command="{Binding RespaldarCommand}" Margin="30,0,0,0" Padding="10,0"
+      <Button Content="{StaticResource T_ExportarPdf}" Command="{Binding ExportarPdfCommand}" Margin="10,0,0,0" Padding="10,0" />
+      <Button Content="{StaticResource T_ExportarExcel}" Command="{Binding ExportarExcelCommand}" Margin="10,0,0,0" Padding="10,0" />
+      <Button Content="{StaticResource T_RespaldoXml}" Command="{Binding RespaldarCommand}" Margin="30,0,0,0" Padding="10,0"
               Visibility="{Binding PuedeRespaldar, Converter={StaticResource Visible}}" />
     </StackPanel>
 
@@ -31,6 +31,6 @@
     <lvc:CartesianChart Grid.Row="2" Height="220" Margin="0,8,0,0" Series="{Binding Series}" XAxes="{Binding EjeX}" YAxes="{Binding EjeY}"
                         Visibility="{Binding MostrarGrafico, Converter={StaticResource Visible}}" />
 
-    <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="DarkBlue" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
+    <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="{StaticResource ColorMensaje}" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
   </Grid>
 </UserControl>

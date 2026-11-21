@@ -1,11 +1,6 @@
 using System.Windows;
 using Microsoft.Win32;
-using SGBU.Services.Catalogo;
-using SGBU.Services.Multas;
-using SGBU.Services.Prestamos;
-using SGBU.Services.Reportes;
 using SGBU.Services.Seguridad;
-using SGBU.Services.Usuarios;
 using SGBU.UI.ViewModels;
 using SGBU.UI.Views;
 
@@ -14,35 +9,25 @@ namespace SGBU.UI.Navegacion;
 // Abre y cierra las ventanas, para que los ViewModels no tengan que conocer las vistas.
 public class ServicioVentanas : IServicioVentanas
 {
-    private readonly ServicioAutenticacion autenticacion;
-    private readonly ServicioCatalogo catalogo;
-    private readonly ServicioUsuarios usuarios;
-    private readonly ServicioPrestamos prestamos;
-    private readonly ServicioMultas multas;
-    private readonly ServicioReportes reportes;
+    private readonly Servicios servicios;
     private Window? ventanaActual;
 
-    public ServicioVentanas(ServicioAutenticacion autenticacion, ServicioCatalogo catalogo, ServicioUsuarios usuarios, ServicioPrestamos prestamos, ServicioMultas multas, ServicioReportes reportes)
+    public ServicioVentanas(Servicios servicios)
     {
-        this.autenticacion = autenticacion;
-        this.catalogo = catalogo;
-        this.usuarios = usuarios;
-        this.prestamos = prestamos;
-        this.multas = multas;
-        this.reportes = reportes;
+        this.servicios = servicios;
     }
 
     public void MostrarLogin()
     {
         LoginWindow login = new LoginWindow();
-        login.DataContext = new LoginViewModel(autenticacion, this);
+        login.DataContext = new LoginViewModel(servicios.Autenticacion, this);
         Cambiar(login);
     }
 
     public void MostrarPrincipal(Sesion sesion)
     {
         PrincipalWindow principal = new PrincipalWindow();
-        principal.DataContext = new PrincipalViewModel(sesion, this, catalogo, usuarios, prestamos, multas, reportes);
+        principal.DataContext = new PrincipalViewModel(sesion, this, servicios);
         Cambiar(principal);
     }
 
