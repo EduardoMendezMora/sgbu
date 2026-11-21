@@ -120,7 +120,7 @@ IF EXISTS (SELECT 1 FROM dbo.Prestamos WHERE FechaDevolucion IS NULL AND FechaVe
 BEGIN SET @ok += 1; PRINT N'ok    ' + @nombre; END
 ELSE BEGIN SET @fallos += 1; PRINT N'FALLA: ' + @nombre; END
 
-/* Multas: se activan solas cuando exista la tabla (la escribe Eduardo). */
+/* Multas: se activan solas cuando exista la tabla . */
 IF OBJECT_ID(N'dbo.Multas', N'U') IS NULL
     PRINT N'PEND  Multas: la tabla todavía no existe (003_tabla_multas.sql)';
 ELSE
@@ -149,6 +149,19 @@ BEGIN
         EXEC sp_executesql @sql, N'@p INT, @u INT', @prestamo, @usuario;
         SET @fallos += 1; PRINT N'FALLA: ' + @nombre;
     END TRY BEGIN CATCH SET @ok += 1; PRINT N'ok    ' + @nombre; END CATCH;
+
+    SET @nombre = N'Multas: rechaza multa pagada sin fecha de pago';
+    SET @sql = N'INSERT dbo.Multas (PrestamoId, UsuarioId, DiasAtraso, Monto, Estado) VALUES (@p, @u, 1, 50, N''Pagada'');';
+    BEGIN TRY
+        EXEC sp_executesql @sql, N'@p INT, @u INT', @prestamo, @usuario;
+        SET @fallos += 1; PRINT N'FALLA: ' + @nombre;
+    END TRY BEGIN CATCH SET @ok += 1; PRINT N'ok    ' + @nombre; END CATCH;
+
+    SET @nombre = N'Seed: EST-1002 tiene una multa pendiente de 400 (8 días tarde)';
+    IF EXISTS (SELECT 1 FROM dbo.Multas mu JOIN dbo.Usuarios u ON u.Id = mu.UsuarioId
+               WHERE u.Carne = N'EST-1002' AND mu.Estado = N'Pendiente' AND mu.Monto = 400 AND mu.DiasAtraso = 8)
+    BEGIN SET @ok += 1; PRINT N'ok    ' + @nombre; END
+    ELSE BEGIN SET @fallos += 1; PRINT N'FALLA: ' + @nombre; END
 END
 
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;

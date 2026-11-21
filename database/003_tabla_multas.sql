@@ -1,33 +1,45 @@
 /*
     003_tabla_multas.sql
-    >>> ESTA TABLA LA ESCRIBE EDUARDO (guía abajo). <<<
 
     Regla de negocio:
     - Multa de ₡50 por día de atraso, con tope de ₡2000.
     - Mientras un usuario tenga multas pendientes, no puede pedir préstamos.
     - Una multa nace de un préstamo devuelto tarde.
 
-    Preguntas para pensar antes de escribir (las va a hacer el profe):
-    1. ¿A qué tabla apunta la multa: a Prestamos, a Usuarios o a las dos? ¿Por qué?
-       Pista: con el préstamo se sabe el usuario, pero el bloqueo de préstamos pregunta
-       "¿este usuario tiene multas pendientes?" muchas veces al día.
-    2. ¿Puede un mismo préstamo tener dos multas? ¿Qué restricción lo impide?
-    3. ¿Qué tipo de dato usar para el monto? (Pista: nunca FLOAT para dinero.)
-    4. ¿Qué CHECK garantiza el tope de ₡2000 y que el monto no sea negativo?
-    5. ¿Cómo se sabe si está pendiente o pagada, y cuándo se pagó?
-
-    Columnas sugeridas: Id, PrestamoId, UsuarioId, DiasAtraso, Monto, Estado,
-    FechaGeneracion, FechaPago.
-
-    Modelo a seguir: la tabla Reservas en 002_tablas.sql (tiene IDENTITY, DEFAULT,
-    FOREIGN KEY y un CHECK de Estado).
-
-    Cuando la tengas, también falta su índice en 004_indices.sql (está marcado ahí).
-    Para probar: bash database/ejecutar.sh
+    Decisiones (lo que pregunta el profe):
+    1. Apunta a Prestamos Y a Usuarios. Con el préstamo ya se sabe el usuario, pero
+       "¿este usuario tiene multas pendientes?" se pregunta en cada préstamo nuevo;
+       con UsuarioId aquí se responde sin JOIN. Es una duplicación controlada.
+    2. UNIQUE (PrestamoId): un préstamo se devuelve una vez, así que genera máximo una multa.
+    3. DECIMAL(10, 2) para el monto: FLOAT guarda aproximaciones (0.1 + 0.2 <> 0.3).
+    4. CHECK del monto entre 0 y 2000, y DiasAtraso > 0 (sin atraso no hay multa).
+    5. Estado Pendiente/Pagada + FechaPago. CK_Multas_Pago amarra las dos: si está
+       pagada tiene fecha, si está pendiente no.
 */
 USE SGBU;
 GO
 
--- Escribe aquí: IF OBJECT_ID(N'dbo.Multas', N'U') IS NULL CREATE TABLE dbo.Multas ( ... );
+IF OBJECT_ID(N'dbo.Multas', N'U') IS NULL
+CREATE TABLE dbo.Multas
+(
+    Id                  INT            IDENTITY(1, 1) NOT NULL,
+    PrestamoId          INT            NOT NULL,
+    UsuarioId           INT            NOT NULL,
+    DiasAtraso          INT            NOT NULL,
+    Monto               DECIMAL(10, 2) NOT NULL,
+    Estado              NVARCHAR(10)   NOT NULL CONSTRAINT DF_Multas_Estado DEFAULT (N'Pendiente'),
+    FechaGeneracion     DATETIME2(0)   NOT NULL CONSTRAINT DF_Multas_FechaGeneracion DEFAULT (SYSDATETIME()),
+    FechaPago           DATETIME2(0)   NULL,
 
+    CONSTRAINT PK_Multas PRIMARY KEY (Id),
+    CONSTRAINT FK_Multas_Prestamos FOREIGN KEY (PrestamoId) REFERENCES dbo.Prestamos (Id),
+    CONSTRAINT FK_Multas_Usuarios FOREIGN KEY (UsuarioId) REFERENCES dbo.Usuarios (Id),
+    CONSTRAINT UQ_Multas_Prestamo UNIQUE (PrestamoId),
+    CONSTRAINT CK_Multas_DiasAtraso CHECK (DiasAtraso > 0),
+    CONSTRAINT CK_Multas_Monto CHECK (Monto >= 0 AND Monto <= 2000),
+    CONSTRAINT CK_Multas_Estado CHECK (Estado IN (N'Pendiente', N'Pagada')),
+    CONSTRAINT CK_Multas_Pago CHECK (
+        (Estado = N'Pendiente' AND FechaPago IS NULL) OR
+        (Estado = N'Pagada' AND FechaPago IS NOT NULL))
+);
 GO

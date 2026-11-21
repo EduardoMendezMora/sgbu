@@ -116,7 +116,17 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Reservas)
     FROM dbo.Usuarios u CROSS JOIN dbo.Materiales m
     WHERE u.Carne = N'EST-1001' AND m.Isbn = '9786073212342';
 
-/* Las multas de prueba se agregan cuando exista la tabla Multas (003).
-   El préstamo devuelto 8 días tarde (EST-1002, Clean Code) debería tener una multa
-   de 8 × ₡50 = ₡400. */
+/* ---------- Multas ----------
+   Cada préstamo devuelto tarde genera su multa (₡50 por día, tope ₡2000). En el seed hay uno:
+   - EST-1002, Clean Code: 8 días tarde = ₡400, PENDIENTE (EST-1002 no puede pedir préstamos).
+   Los devueltos a tiempo no generan multa. Los atrasados aún sin devolver tampoco:
+   la multa nace al devolver. */
+IF NOT EXISTS (SELECT 1 FROM dbo.Multas)
+    INSERT dbo.Multas (PrestamoId, UsuarioId, DiasAtraso, Monto, FechaGeneracion)
+    SELECT p.Id, p.UsuarioId, d.Dias,
+           CASE WHEN d.Dias * 50 > 2000 THEN 2000 ELSE d.Dias * 50 END,
+           p.FechaDevolucion
+    FROM dbo.Prestamos p
+    CROSS APPLY (SELECT DATEDIFF(DAY, p.FechaVencimiento, CAST(p.FechaDevolucion AS DATE)) AS Dias) d
+    WHERE p.FechaDevolucion IS NOT NULL AND d.Dias > 0;
 GO

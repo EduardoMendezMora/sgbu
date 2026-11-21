@@ -49,6 +49,9 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Auditoria_Usuario')
     CREATE INDEX IX_Auditoria_Usuario ON dbo.Auditoria (UsuarioId, Fecha DESC);
 GO
 
-/* PENDIENTE (Eduardo, cuando exista la tabla Multas):
-   índice para la pregunta "¿este usuario tiene multas pendientes?", que se hace en cada
-   préstamo. Pista: igual que IX_Prestamos_Usuario_Activos, un índice filtrado. */
+-- "¿Este usuario tiene multas pendientes?" se pregunta en cada préstamo. Índice filtrado:
+-- solo guarda las pendientes, que son pocas; las pagadas no ocupan espacio en él.
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Multas_Usuario_Pendientes')
+    CREATE INDEX IX_Multas_Usuario_Pendientes ON dbo.Multas (UsuarioId)
+        INCLUDE (Monto) WHERE Estado = N'Pendiente';
+GO
