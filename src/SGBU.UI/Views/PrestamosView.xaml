@@ -1,0 +1,54 @@
+<UserControl x:Class="SGBU.UI.Views.PrestamosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Grid Margin="10">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Nuevo préstamo -->
+    <GroupBox Grid.Row="0" Header="Nuevo préstamo">
+      <StackPanel Orientation="Horizontal" Margin="5">
+        <Label Content="Carné:" />
+        <TextBox x:Name="txtCarne" Text="{Binding Carne}" Width="120" />
+        <Label Content="ISBN:" Margin="10,0,0,0" />
+        <TextBox x:Name="txtIsbn" Text="{Binding Isbn}" Width="160" />
+        <Button x:Name="btnPrestar" Content="Prestar" Command="{Binding PrestarCommand}" Margin="10,0,0,0" Padding="15,2" />
+      </StackPanel>
+    </GroupBox>
+
+    <!-- Mensaje -->
+    <TextBlock Grid.Row="1" Text="{Binding Mensaje}" Foreground="DarkBlue" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8" />
+
+    <!-- Búsqueda -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+      <Label Content="Préstamos activos. Buscar:" />
+      <TextBox Text="{Binding TextoBuscar}" Width="200" />
+      <Button Content="Buscar" Command="{Binding BuscarCommand}" Margin="10,0,0,0" Padding="10,0" />
+    </StackPanel>
+
+    <!-- Tabla -->
+    <DataGrid Grid.Row="3" ItemsSource="{Binding Prestamos}" SelectedItem="{Binding PrestamoSeleccionado}"
+              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Carné" Binding="{Binding Carne}" Width="75" />
+        <DataGridTextColumn Header="Usuario" Binding="{Binding Usuario}" Width="*" />
+        <DataGridTextColumn Header="Título" Binding="{Binding Titulo}" Width="*" />
+        <DataGridTextColumn Header="Prestado" Binding="{Binding FechaPrestamo, StringFormat=dd/MM/yyyy}" Width="80" />
+        <DataGridTextColumn Header="Vence" Binding="{Binding FechaVencimiento, StringFormat=dd/MM/yyyy}" Width="80" />
+        <DataGridCheckBoxColumn Header="Renovado" Binding="{Binding Renovado, Mode=OneWay}" Width="65" />
+        <DataGridTextColumn Header="Días de atraso" Binding="{Binding DiasAtraso}" Width="90" />
+      </DataGrid.Columns>
+    </DataGrid>
+
+    <!-- Acciones sobre el préstamo seleccionado -->
+    <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,8,0,0">
+      <Button x:Name="btnDevolver" Content="Registrar devolución" Command="{Binding DevolverCommand}" Padding="10,2" />
+      <Button Content="Renovar" Command="{Binding RenovarCommand}" Margin="10,0,0,0" Padding="10,2" />
+    </StackPanel>
+  </Grid>
+</UserControl>

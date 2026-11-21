@@ -14,6 +14,14 @@ internal class FabricaFalsa : IFabricaUnidadDeTrabajo
 
     public List<RegistroAuditoria> Auditoria { get; } = new List<RegistroAuditoria>();
 
+    public List<Prestamo> Prestamos { get; } = new List<Prestamo>();
+
+    public List<int> UsuariosConMulta { get; } = new List<int>();
+
+    public List<int> MaterialesReservados { get; } = new List<int>();
+
+    public List<string> LlamadasProcedimientos { get; } = new List<string>();
+
     public int Confirmaciones { get; set; }
 
     public Task<IUnidadDeTrabajo> CrearAsync()

@@ -11,6 +11,12 @@
     <DataTemplate DataType="{x:Type vm:CatalogoViewModel}">
       <views:CatalogoView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:PrestamosViewModel}">
+      <views:PrestamosView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:MisPrestamosViewModel}">
+      <views:MisPrestamosView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:UsuariosViewModel}">
       <views:UsuariosView />
     </DataTemplate>

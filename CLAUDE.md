@@ -105,7 +105,9 @@ dotnet run --project src/SGBU.UI      # solo en Windows
       Falta verlo en una PC con Windows: `README.md`, sección "Cómo probarlo en Windows"
 - [x] 6. Catálogo y Usuarios: CRUD, búsquedas, validaciones, paginación (rama
       `feature/catalogo-usuarios`; ServicioCatalogo y ServicioUsuarios con permisos y auditoría)
-- [ ] 7. Préstamos y devoluciones con stored procedures
+- [x] 7. Préstamos y devoluciones con stored procedures (rama `feature/prestamos`;
+      `006_procedimientos.sql`: sp_RegistrarPrestamo, sp_RegistrarDevolucion (genera la multa),
+      sp_RenovarPrestamo; pantallas "Préstamos y devoluciones" y "Mis préstamos")
 - [ ] 8. Multas y pagos
 - [ ] 9. Reportes (PDF, Excel, gráficos) y respaldo XML
 - [ ] 10. Configuración (tema, idioma ES/EN) y auditoría

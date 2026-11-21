@@ -170,3 +170,65 @@ PRINT N'';
 PRINT CONCAT(N'Resultado: ', @ok, N' pasan, ', @fallos, N' fallan');
 IF @fallos > 0 THROW 50000, N'Hay pruebas de base de datos que fallan', 1;
 GO
+
+/* ---------- Stored procedures (dentro de una transacción que se revierte) ---------- */
+SET NOCOUNT ON;
+DECLARE @okSp INT = 0, @fallosSp INT = 0, @nombreSp NVARCHAR(200);
+DECLARE @prof INT = (SELECT Id FROM dbo.Usuarios WHERE Carne = N'PRF-002');
+DECLARE @est2 INT = (SELECT Id FROM dbo.Usuarios WHERE Carne = N'EST-1002');
+DECLARE @adm INT = (SELECT Id FROM dbo.Usuarios WHERE Carne = N'ADM-001');
+DECLARE @calculo INT = (SELECT Id FROM dbo.Materiales WHERE Isbn = '9789580001119');
+DECLARE @agotado INT = (SELECT Id FROM dbo.Materiales WHERE Isbn = '9789876543217');
+DECLARE @nuevo INT, @dias INT, @monto DECIMAL(10, 2), @antes INT;
+
+BEGIN TRANSACTION;
+
+SET @nombreSp = N'SP: prestar baja el stock y crea el préstamo';
+SET @antes = (SELECT StockDisponible FROM dbo.Materiales WHERE Id = @calculo);
+EXEC dbo.sp_RegistrarPrestamo @prof, @calculo, @adm, @nuevo OUTPUT;
+IF @nuevo IS NOT NULL AND (SELECT StockDisponible FROM dbo.Materiales WHERE Id = @calculo) = @antes - 1
+BEGIN SET @okSp += 1; PRINT N'ok    ' + @nombreSp; END
+ELSE BEGIN SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp; END
+
+SET @nombreSp = N'SP: no presta si no hay stock';
+BEGIN TRY
+    EXEC dbo.sp_RegistrarPrestamo @prof, @agotado, @adm, @nuevo OUTPUT;
+    SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp;
+END TRY BEGIN CATCH
+    IF ERROR_NUMBER() = 50005 BEGIN SET @okSp += 1; PRINT N'ok    ' + @nombreSp; END
+    ELSE BEGIN SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp + N' (' + ERROR_MESSAGE() + N')'; END
+END CATCH
+
+SET @nombreSp = N'SP: no presta si el usuario tiene multas';
+BEGIN TRY
+    EXEC dbo.sp_RegistrarPrestamo @est2, @calculo, @adm, @nuevo OUTPUT;
+    SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp;
+END TRY BEGIN CATCH
+    IF ERROR_NUMBER() = 50003 BEGIN SET @okSp += 1; PRINT N'ok    ' + @nombreSp; END
+    ELSE BEGIN SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp + N' (' + ERROR_MESSAGE() + N')'; END
+END CATCH
+
+SET @nombreSp = N'SP: devolver un préstamo atrasado genera la multa';
+DECLARE @atrasado INT = (SELECT TOP 1 p.Id FROM dbo.Prestamos p JOIN dbo.Usuarios u ON u.Id = p.UsuarioId
+                         WHERE u.Carne = N'EST-1004' AND p.FechaDevolucion IS NULL);
+EXEC dbo.sp_RegistrarDevolucion @atrasado, @adm, @dias OUTPUT, @monto OUTPUT;
+IF @dias = 13 AND @monto = 650 AND EXISTS (SELECT 1 FROM dbo.Multas WHERE PrestamoId = @atrasado AND Monto = 650)
+BEGIN SET @okSp += 1; PRINT N'ok    ' + @nombreSp; END
+ELSE BEGIN SET @fallosSp += 1; PRINT CONCAT(N'FALLA: ', @nombreSp, N' (días ', @dias, N', monto ', @monto, N')'); END
+
+SET @nombreSp = N'SP: no renueva si el material está reservado';
+DECLARE @reservado INT = (SELECT TOP 1 p.Id FROM dbo.Prestamos p JOIN dbo.Usuarios u ON u.Id = p.UsuarioId
+                          WHERE u.Carne = N'EST-1003' AND p.FechaDevolucion IS NULL);
+BEGIN TRY
+    EXEC dbo.sp_RenovarPrestamo @reservado, @adm;
+    SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp;
+END TRY BEGIN CATCH
+    IF ERROR_NUMBER() = 50025 BEGIN SET @okSp += 1; PRINT N'ok    ' + @nombreSp; END
+    ELSE BEGIN SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp + N' (' + ERROR_MESSAGE() + N')'; END
+END CATCH
+
+IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+
+PRINT CONCAT(N'Procedimientos: ', @okSp, N' pasan, ', @fallosSp, N' fallan');
+IF @fallosSp > 0 THROW 50000, N'Hay pruebas de procedimientos que fallan', 1;
+GO
