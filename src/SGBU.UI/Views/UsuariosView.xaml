@@ -23,11 +23,11 @@
     <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Usuarios}" SelectedItem="{Binding UsuarioSeleccionado}"
               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="Carné" Binding="{Binding Carne}" />
+        <DataGridTextColumn Header="Carné" Binding="{Binding Carne}" Width="75" />
         <DataGridTextColumn Header="Nombre" Binding="{Binding NombreCompleto}" Width="*" />
         <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*" />
-        <DataGridTextColumn Header="Rol" Binding="{Binding Rol.Nombre}" />
-        <DataGridCheckBoxColumn Header="Activo" Binding="{Binding Activo, Mode=OneWay}" />
+        <DataGridTextColumn Header="Rol" Binding="{Binding Rol.Nombre}" Width="100" />
+        <DataGridCheckBoxColumn Header="Activo" Binding="{Binding Activo, Mode=OneWay}" Width="50" />
       </DataGrid.Columns>
     </DataGrid>
 

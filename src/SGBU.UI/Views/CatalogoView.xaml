@@ -29,12 +29,12 @@
     <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Materiales}" SelectedItem="{Binding MaterialSeleccionado}"
               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="ISBN" Binding="{Binding Isbn}" />
+        <DataGridTextColumn Header="ISBN" Binding="{Binding Isbn}" Width="110" />
         <DataGridTextColumn Header="Título" Binding="{Binding Titulo}" Width="*" />
         <DataGridTextColumn Header="Autor" Binding="{Binding Autor}" Width="*" />
-        <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" />
-        <DataGridTextColumn Header="Disponibles" Binding="{Binding StockDisponible}" />
-        <DataGridTextColumn Header="Total" Binding="{Binding StockTotal}" />
+        <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="65" />
+        <DataGridTextColumn Header="Disponibles" Binding="{Binding StockDisponible}" Width="80" />
+        <DataGridTextColumn Header="Total" Binding="{Binding StockTotal}" Width="50" />
       </DataGrid.Columns>
     </DataGrid>
 
