@@ -43,6 +43,16 @@ try
     Thread.Sleep(3000);
     Foto(principal, "05_usuarios.png");
 
+    ElegirMenu(principal, "Préstamos y devoluciones");
+    Thread.Sleep(3000);
+    Foto(principal, "06_prestamos.png");
+
+    Escribir(principal.FindFirstDescendant(cf => cf.ByAutomationId("txtCarne")), "PRF-002");
+    Escribir(principal.FindFirstDescendant(cf => cf.ByAutomationId("txtIsbn")), "9780134685991");
+    principal.FindFirstDescendant(cf => cf.ByAutomationId("btnPrestar")).AsButton().Invoke();
+    Thread.Sleep(3000);
+    Foto(principal, "07_prestamo_registrado.png");
+
     // 3. Estudiante: el menú tiene menos opciones y no hay formulario
     principal.FindFirstDescendant(cf => cf.ByAutomationId("btnCerrarSesion")).AsButton().Invoke();
     Thread.Sleep(2000);
@@ -51,7 +61,11 @@ try
     Window principalEstudiante = EsperarVentana("Biblioteca Universitaria");
     principalEstudiante.Patterns.Window.Pattern.SetWindowVisualState(FlaUI.Core.Definitions.WindowVisualState.Maximized);
     Thread.Sleep(3000);
-    Foto(principalEstudiante, "06_catalogo_estudiante.png");
+    Foto(principalEstudiante, "08_catalogo_estudiante.png");
+
+    ElegirMenu(principalEstudiante, "Mis préstamos");
+    Thread.Sleep(3000);
+    Foto(principalEstudiante, "09_mis_prestamos.png");
 
     Console.WriteLine("Capturas listas en " + carpeta);
 }

@@ -11,7 +11,7 @@ internal class MaterialesFalsos : IRepositorioMateriales
 
     public Task<Material?> ObtenerPorIdAsync(int id) => Task.FromResult(datos.FirstOrDefault(m => m.Id == id));
 
-    public Task<Material?> ObtenerPorIsbnAsync(string isbn) => Task.FromResult(datos.FirstOrDefault(m => m.Isbn == isbn));
+    public Task<Material?> ObtenerPorIsbnAsync(string isbn) => Task.FromResult(datos.FirstOrDefault(m => m.Isbn == isbn.Replace("-", string.Empty).Replace(" ", string.Empty)));
 
     public Task<Pagina<Material>> BuscarAsync(string? texto, TipoMaterial? tipo, int numeroPagina, int tamanoPagina)
     {

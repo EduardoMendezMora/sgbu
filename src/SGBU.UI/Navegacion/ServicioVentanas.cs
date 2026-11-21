@@ -1,5 +1,6 @@
 using System.Windows;
 using SGBU.Services.Catalogo;
+using SGBU.Services.Prestamos;
 using SGBU.Services.Seguridad;
 using SGBU.Services.Usuarios;
 using SGBU.UI.ViewModels;
@@ -13,13 +14,15 @@ public class ServicioVentanas : IServicioVentanas
     private readonly ServicioAutenticacion autenticacion;
     private readonly ServicioCatalogo catalogo;
     private readonly ServicioUsuarios usuarios;
+    private readonly ServicioPrestamos prestamos;
     private Window? ventanaActual;
 
-    public ServicioVentanas(ServicioAutenticacion autenticacion, ServicioCatalogo catalogo, ServicioUsuarios usuarios)
+    public ServicioVentanas(ServicioAutenticacion autenticacion, ServicioCatalogo catalogo, ServicioUsuarios usuarios, ServicioPrestamos prestamos)
     {
         this.autenticacion = autenticacion;
         this.catalogo = catalogo;
         this.usuarios = usuarios;
+        this.prestamos = prestamos;
     }
 
     public void MostrarLogin()
@@ -32,7 +35,7 @@ public class ServicioVentanas : IServicioVentanas
     public void MostrarPrincipal(Sesion sesion)
     {
         PrincipalWindow principal = new PrincipalWindow();
-        principal.DataContext = new PrincipalViewModel(sesion, this, catalogo, usuarios);
+        principal.DataContext = new PrincipalViewModel(sesion, this, catalogo, usuarios, prestamos);
         Cambiar(principal);
     }
 

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SGBU.Services.Catalogo;
+using SGBU.Services.Prestamos;
 using SGBU.Services.Seguridad;
 using SGBU.Services.Usuarios;
 using SGBU.UI.Navegacion;
@@ -13,6 +14,7 @@ public partial class PrincipalViewModel : ObservableObject
     private readonly IServicioVentanas ventanas;
     private readonly ServicioCatalogo servicioCatalogo;
     private readonly ServicioUsuarios servicioUsuarios;
+    private readonly ServicioPrestamos servicioPrestamos;
 
     [ObservableProperty]
     private OpcionMenu? opcionSeleccionada;
@@ -22,11 +24,12 @@ public partial class PrincipalViewModel : ObservableObject
     [ObservableProperty]
     private object? vistaActual;
 
-    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios)
+    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios, ServicioPrestamos servicioPrestamos)
     {
         this.ventanas = ventanas;
         this.servicioCatalogo = servicioCatalogo;
         this.servicioUsuarios = servicioUsuarios;
+        this.servicioPrestamos = servicioPrestamos;
         Sesion = sesion;
         Bienvenida = "Bienvenido(a), " + sesion.NombreCompleto;
 
@@ -59,6 +62,14 @@ public partial class PrincipalViewModel : ObservableObject
         else if (value.Permiso == Permiso.VerCatalogo)
         {
             VistaActual = new CatalogoViewModel(servicioCatalogo, Sesion);
+        }
+        else if (value.Permiso == Permiso.VerMisPrestamos)
+        {
+            VistaActual = new MisPrestamosViewModel(servicioPrestamos, Sesion);
+        }
+        else if (value.Permiso == Permiso.RegistrarPrestamos)
+        {
+            VistaActual = new PrestamosViewModel(servicioPrestamos, Sesion);
         }
         else if (value.Permiso == Permiso.GestionarUsuarios)
         {

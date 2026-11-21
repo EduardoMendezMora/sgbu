@@ -13,6 +13,9 @@ internal class UnidadFalsa : IUnidadDeTrabajo
         this.fabrica = fabrica;
         Usuarios = new UsuariosFalsos(fabrica);
         Materiales = new MaterialesFalsos(fabrica.Materiales);
+        Prestamos = new PrestamosFalsos(fabrica);
+        Multas = new MultasFalsas(fabrica);
+        Reservas = new ReservasFalsas(fabrica);
         Auditoria = new AuditoriaFalsa(pendientes);
     }
 
@@ -20,11 +23,11 @@ internal class UnidadFalsa : IUnidadDeTrabajo
 
     public IRepositorioUsuarios Usuarios { get; }
 
-    public IRepositorioPrestamos Prestamos => throw new NotSupportedException();
+    public IRepositorioPrestamos Prestamos { get; }
 
-    public IRepositorioMultas Multas => throw new NotSupportedException();
+    public IRepositorioMultas Multas { get; }
 
-    public IRepositorioReservas Reservas => throw new NotSupportedException();
+    public IRepositorioReservas Reservas { get; }
 
     public IRepositorioAuditoria Auditoria { get; }
 

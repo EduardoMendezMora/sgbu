@@ -1,6 +1,7 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using SGBU.Domain.Entidades;
+using SGBU.Domain.Excepciones;
 using SGBU.Domain.Repositorios;
 
 namespace SGBU.Data.Repositorios;
@@ -82,6 +83,97 @@ public class RepositorioPrestamos : IRepositorioPrestamos
         cmd.Parameters.Add("@FechaDevolucion", SqlDbType.DateTime2).Value = (object?)prestamo.FechaDevolucion ?? DBNull.Value;
         cmd.Parameters.Add("@Renovado", SqlDbType.Bit).Value = prestamo.Renovado;
         await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<IReadOnlyList<PrestamoDetalle>> ListarActivosDetalleAsync(string? texto, int? usuarioId)
+    {
+        string sql = "SELECT p.Id, p.UsuarioId, u.Carne, u.Nombre + ' ' + u.Apellidos AS Usuario, m.Isbn, m.Titulo, " +
+                     "p.FechaPrestamo, p.FechaVencimiento, p.Renovado " +
+                     "FROM Prestamos p " +
+                     "INNER JOIN Usuarios u ON u.Id = p.UsuarioId " +
+                     "INNER JOIN Materiales m ON m.Id = p.MaterialId " +
+                     "WHERE p.FechaDevolucion IS NULL " +
+                     "AND (@UsuarioId IS NULL OR p.UsuarioId = @UsuarioId) " +
+                     "AND (@Texto IS NULL OR u.Carne LIKE @Texto OR u.Nombre LIKE @Texto OR u.Apellidos LIKE @Texto " +
+                     "OR m.Titulo LIKE @Texto OR m.Isbn LIKE @Texto) " +
+                     "ORDER BY p.FechaVencimiento";
+        using SqlCommand cmd = new SqlCommand(sql, conexion, transaccion);
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = (object?)usuarioId ?? DBNull.Value;
+        cmd.Parameters.Add("@Texto", SqlDbType.NVarChar, 210).Value =
+            string.IsNullOrWhiteSpace(texto) ? DBNull.Value : "%" + texto.Trim() + "%";
+
+        List<PrestamoDetalle> lista = new List<PrestamoDetalle>();
+        using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            PrestamoDetalle detalle = new PrestamoDetalle();
+            detalle.Id = (int)reader["Id"];
+            detalle.UsuarioId = (int)reader["UsuarioId"];
+            detalle.Carne = (string)reader["Carne"];
+            detalle.Usuario = (string)reader["Usuario"];
+            detalle.Isbn = (string)reader["Isbn"];
+            detalle.Titulo = (string)reader["Titulo"];
+            detalle.FechaPrestamo = (DateTime)reader["FechaPrestamo"];
+            detalle.FechaVencimiento = (DateTime)reader["FechaVencimiento"];
+            detalle.Renovado = (bool)reader["Renovado"];
+            lista.Add(detalle);
+        }
+
+        return lista;
+    }
+
+    public async Task<int> RegistrarAsync(int usuarioId, int materialId, int registradoPorId)
+    {
+        using SqlCommand cmd = new SqlCommand("sp_RegistrarPrestamo", conexion, transaccion);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+        cmd.Parameters.Add("@MaterialId", SqlDbType.Int).Value = materialId;
+        cmd.Parameters.Add("@RegistradoPorId", SqlDbType.Int).Value = registradoPorId;
+        SqlParameter salida = cmd.Parameters.Add("@PrestamoId", SqlDbType.Int);
+        salida.Direction = ParameterDirection.Output;
+
+        await EjecutarProcedimiento(cmd);
+        return (int)salida.Value;
+    }
+
+    public async Task<ResultadoDevolucion> DevolverAsync(int prestamoId, int registradoPorId)
+    {
+        using SqlCommand cmd = new SqlCommand("sp_RegistrarDevolucion", conexion, transaccion);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.Add("@PrestamoId", SqlDbType.Int).Value = prestamoId;
+        cmd.Parameters.Add("@RegistradoPorId", SqlDbType.Int).Value = registradoPorId;
+        SqlParameter dias = cmd.Parameters.Add("@DiasAtraso", SqlDbType.Int);
+        dias.Direction = ParameterDirection.Output;
+        SqlParameter monto = cmd.Parameters.Add("@Monto", SqlDbType.Decimal);
+        monto.Precision = 10;
+        monto.Scale = 2;
+        monto.Direction = ParameterDirection.Output;
+
+        await EjecutarProcedimiento(cmd);
+        return new ResultadoDevolucion((int)dias.Value, (decimal)monto.Value);
+    }
+
+    public async Task RenovarAsync(int prestamoId, int registradoPorId)
+    {
+        using SqlCommand cmd = new SqlCommand("sp_RenovarPrestamo", conexion, transaccion);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.Add("@PrestamoId", SqlDbType.Int).Value = prestamoId;
+        cmd.Parameters.Add("@RegistradoPorId", SqlDbType.Int).Value = registradoPorId;
+
+        await EjecutarProcedimiento(cmd);
+    }
+
+    // Los procedimientos avisan los errores con THROW 50001, 50002... y un mensaje para el usuario.
+    private static async Task EjecutarProcedimiento(SqlCommand cmd)
+    {
+        try
+        {
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (SqlException ex) when (ex.Number > 50000)
+        {
+            throw new OperacionNoPermitidaException(ex.Message);
+        }
     }
 
     private static Prestamo LeerPrestamo(SqlDataReader reader)

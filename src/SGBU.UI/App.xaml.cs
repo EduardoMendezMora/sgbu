@@ -2,6 +2,7 @@ using System.Windows;
 using Microsoft.Extensions.Configuration;
 using SGBU.Data;
 using SGBU.Services.Catalogo;
+using SGBU.Services.Prestamos;
 using SGBU.Services.Seguridad;
 using SGBU.Services.Usuarios;
 using SGBU.UI.Navegacion;
@@ -35,8 +36,9 @@ public partial class App : Application
         ServicioAutenticacion autenticacion = new ServicioAutenticacion(fabrica, hasher);
         ServicioCatalogo catalogo = new ServicioCatalogo(fabrica);
         ServicioUsuarios usuarios = new ServicioUsuarios(fabrica, hasher);
+        ServicioPrestamos prestamos = new ServicioPrestamos(fabrica);
 
-        ServicioVentanas ventanas = new ServicioVentanas(autenticacion, catalogo, usuarios);
+        ServicioVentanas ventanas = new ServicioVentanas(autenticacion, catalogo, usuarios, prestamos);
         ventanas.MostrarLogin();
     }
 }
