@@ -1,7 +1,8 @@
 name: Capturas
 
 # Abre la aplicación en Windows, toma fotos de las pantallas y las guarda en la rama
-# "capturas" (carpeta = nombre de la rama). También deja la aplicación lista para descargar.
+# "capturas" (carpeta = nombre de la rama). También arma el instalador MSI; en develop lo
+# publica en la versión "ultima" del repositorio para descargarlo.
 on:
   push:
     branches: [develop, 'feature/**']
@@ -25,17 +26,30 @@ jobs:
         shell: pwsh
         run: .\database\ejecutar.ps1
 
+      # --self-contained: incluye .NET, así la computadora no necesita instalarlo aparte.
       - name: Publicar la aplicación
-        run: dotnet publish src/SGBU.UI -c Release -o publicar
+        run: dotnet publish src/SGBU.UI -c Release -r win-x64 --self-contained true -o publicar
 
       - name: Tomar capturas
         run: dotnet run --project tools/SGBU.Capturas -c Release -- "${{ github.workspace }}\publicar\SGBU.UI.exe" "${{ github.workspace }}\capturas"
 
-      - name: Guardar la aplicación para descargar
+      - name: Armar el instalador MSI
+        run: dotnet build instalador/SGBU.Instalador.wixproj -c Release -o instalador/salida
+
+      - name: Guardar el instalador para descargar
         uses: actions/upload-artifact@v4
         with:
-          name: SGBU-app
-          path: publicar
+          name: SGBU-Instalador
+          path: instalador/salida/*.msi
+
+      - name: Publicar el instalador en la versión "ultima" (solo develop)
+        if: github.ref_name == 'develop'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ultima --yes --cleanup-tag 2>$null
+          gh release create ultima instalador/salida/SGBU-Instalador.msi --prerelease --target ${{ github.sha }} --title "SGBU - última versión de develop" --notes "Instalador generado automáticamente desde develop (${{ github.sha }}). Antes de abrir la aplicación, cree la base con database\ejecutar.ps1 (queda en la carpeta de instalación)."
 
       - name: Subir capturas a la rama "capturas"
         if: always()

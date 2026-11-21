@@ -1,0 +1,49 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <!-- Instala la aplicación en "Archivos de programa\SGBU" y crea un acceso en el menú Inicio.
+       UpgradeCode no se cambia nunca: así una versión nueva reemplaza a la anterior. -->
+  <Package Name="SGBU - Biblioteca Universitaria"
+           Manufacturer="Grupo 3 - Programación IV"
+           Version="1.0.0.0"
+           UpgradeCode="5D558769-6186-47DA-A022-8DB277CC19A0"
+           Scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="Ya está instalada una versión más nueva de SGBU." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="SGBU" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="CarpetaMenu" Name="SGBU" />
+    </StandardDirectory>
+
+    <Feature Id="Principal" Title="SGBU">
+      <ComponentGroupRef Id="Aplicacion" />
+      <ComponentGroupRef Id="ScriptsBaseDeDatos" />
+      <ComponentRef Id="AccesoDirecto" />
+    </Feature>
+  </Package>
+
+  <!-- Todos los archivos que dejó "dotnet publish". -->
+  <Fragment>
+    <ComponentGroup Id="Aplicacion" Directory="INSTALLFOLDER">
+      <Files Include="..\publicar\**" />
+    </ComponentGroup>
+  </Fragment>
+
+  <!-- Los scripts de la base, para crearla en la computadora con database\ejecutar.ps1. -->
+  <Fragment>
+    <ComponentGroup Id="ScriptsBaseDeDatos" Directory="INSTALLFOLDER" Subdirectory="database">
+      <Files Include="..\database\**" />
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="AccesoDirecto" Directory="CarpetaMenu">
+      <Shortcut Id="AccesoMenu" Name="SGBU - Biblioteca Universitaria"
+                Target="[INSTALLFOLDER]SGBU.UI.exe" WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="QuitarCarpetaMenu" On="uninstall" />
+      <RegistryValue Root="HKLM" Key="Software\SGBU" Name="Instalado" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+</Wix>
