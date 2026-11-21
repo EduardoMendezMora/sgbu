@@ -84,8 +84,9 @@ dotnet run --project src/SGBU.UI      # solo en Windows
 ## Plan y avance
 
 - [x] 1. Entorno, repositorio, solución con las cuatro capas y CI
-- [ ] 2. Base de datos: tablas, índices y seed. Decisión tomada: una sola tabla `Materiales`
-      con columna `Tipo`. Eduardo escribe la tabla `Multas` con guía.
+- [x] 2. Base de datos: tablas (incluida `Multas`), índices, seed y 21 pruebas (`database/`).
+      Decisión tomada: una sola tabla `Materiales` con columna `Tipo`.
+      Límites por rol propuestos, sin confirmar.
 - [ ] 3. Domain: entidades con herencia, excepciones propias, interfaces de repositorio
 - [ ] 4. Data: repositorios ADO.NET, Unit of Work, transacciones
 - [ ] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM
