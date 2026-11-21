@@ -121,8 +121,14 @@ internal sealed class RepositorioUsuarios : IRepositorioUsuarios
     {
         var rol = new Rol(r.Entero("RolId"), r.Texto("RolNombre"), r.Entero("LimitePrestamos"), r.Entero("DiasPrestamo"));
         var usuario = new Usuario(
-            r.Texto("Carne"), r.Texto("Dni"), r.Texto("Nombre"), r.Texto("Apellidos"),
-            r.Texto("Email"), r.TextoONulo("Telefono"), rol, r.Texto("PasswordHash"))
+            r.Texto("Carne"),
+            r.Texto("Dni"),
+            r.Texto("Nombre"),
+            r.Texto("Apellidos"),
+            r.Texto("Email"),
+            r.TextoONulo("Telefono"),
+            rol,
+            r.Texto("PasswordHash"))
         {
             Id = r.Entero("Id"),
             FechaRegistro = r.Fecha("FechaRegistro"),

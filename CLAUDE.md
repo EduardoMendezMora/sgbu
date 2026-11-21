@@ -31,7 +31,7 @@ Clean Architecture con dependencias que solo apuntan hacia Domain:
 | `src/SGBU.Services` | Casos de uso | Domain |
 | `src/SGBU.UI` | WPF: Views y ViewModels; arma la inyección de dependencias | todos |
 | `tests/SGBU.Tests` | Pruebas unitarias xUnit | Domain, Services |
-| `tests/SGBU.Data.Tests` | Pruebas de integración contra SQL Server (necesitan `SGBU_CONN`; sin ella se omiten) | Domain, Data |
+| `tests/SGBU.Data.Tests` | Pruebas de integración contra SQL Server (necesitan `SGBU_CONN`; sin ella se omiten) | Domain, Data, Services |
 
 `tests/SGBU.Tests/ArquitecturaTests.cs` falla si se rompen estas reglas. Sin lógica de negocio
 en el code-behind de las vistas.
@@ -93,7 +93,9 @@ dotnet run --project src/SGBU.UI      # solo en Windows
       (rama `feature/domain`; 90 pruebas, 89 % de cobertura en Domain)
 - [x] 4. Data: repositorios ADO.NET, Unit of Work, transacciones (rama `feature/data`;
       23 pruebas de integración, 94 % de cobertura en Data)
-- [ ] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM
+- [x] 5. Login de punta a punta: BCrypt, roles, primera pantalla MVVM (rama `feature/login`;
+      entra con email o carné, permisos por rol en `Sesion`, LOGIN y LOGIN_FALLIDO auditados).
+      Falta verlo en una PC con Windows: `README.md`, sección "Cómo probarlo en Windows"
 - [ ] 6. Catálogo y Usuarios: CRUD, búsquedas, validaciones, paginación
 - [ ] 7. Préstamos y devoluciones con stored procedures
 - [ ] 8. Multas y pagos

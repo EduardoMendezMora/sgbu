@@ -8,6 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- Configuración: appsettings.json va junto al .exe. appsettings.Local.json (ignorado por git)
+       sirve para poner una cadena de conexión propia sin subirla al repositorio. -->
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.Local.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('appsettings.Local.json')" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SGBU.Domain\SGBU.Domain.csproj" />
     <ProjectReference Include="..\SGBU.Services\SGBU.Services.csproj" />
     <ProjectReference Include="..\SGBU.Data\SGBU.Data.csproj" />

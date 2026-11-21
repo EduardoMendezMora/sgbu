@@ -95,9 +95,13 @@ internal sealed class RepositorioPrestamos : IRepositorioPrestamos
             while (await lector.ReadAsync(ct))
             {
                 lista.Add(new Prestamo(
-                    lector.Entero("Id"), lector.Entero("UsuarioId"), lector.Entero("MaterialId"),
-                    lector.Fecha("FechaPrestamo"), lector.SoloFecha("FechaVencimiento"),
-                    lector.FechaONula("FechaDevolucion"), lector.Booleano("Renovado"))
+                    lector.Entero("Id"),
+                    lector.Entero("UsuarioId"),
+                    lector.Entero("MaterialId"),
+                    lector.Fecha("FechaPrestamo"),
+                    lector.SoloFecha("FechaVencimiento"),
+                    lector.FechaONula("FechaDevolucion"),
+                    lector.Booleano("Renovado"))
                 {
                     RegistradoPorId = lector.EnteroONulo("RegistradoPorId"),
                 });

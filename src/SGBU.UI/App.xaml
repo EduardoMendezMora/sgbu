@@ -1,6 +1,10 @@
 <Application x:Class="SGBU.UI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
-  <Application.Resources />
+             ShutdownMode="OnExplicitShutdown">
+  <Application.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolAVisibilidad" />
+    <SolidColorBrush x:Key="ColorPrincipal" Color="#1F3A5F" />
+    <SolidColorBrush x:Key="ColorError" Color="#B3261E" />
+  </Application.Resources>
 </Application>

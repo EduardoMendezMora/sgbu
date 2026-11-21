@@ -37,9 +37,14 @@ internal sealed class RepositorioMultas : IRepositorioMultas
         while (await lector.ReadAsync(ct))
         {
             lista.Add(new Multa(
-                lector.Entero("Id"), lector.Entero("PrestamoId"), lector.Entero("UsuarioId"), lector.Entero("DiasAtraso"),
-                lector.Decimal("Monto"), Enum.Parse<EstadoMulta>(lector.Texto("Estado")),
-                lector.Fecha("FechaGeneracion"), lector.FechaONula("FechaPago")));
+                lector.Entero("Id"),
+                lector.Entero("PrestamoId"),
+                lector.Entero("UsuarioId"),
+                lector.Entero("DiasAtraso"),
+                lector.Decimal("Monto"),
+                Enum.Parse<EstadoMulta>(lector.Texto("Estado")),
+                lector.Fecha("FechaGeneracion"),
+                lector.FechaONula("FechaPago")));
         }
 
         return lista;

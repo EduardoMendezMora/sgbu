@@ -28,7 +28,11 @@ Profesor 5 / 14 días, Estudiante 3 / 7 días.
 
 ## Cómo ejecutarlos
 
-**Windows (SSMS):** abrir cada `.sql` en orden numérico y ejecutarlo (F5). Después,
+**Windows (PowerShell):** `.\database\ejecutar.ps1` (LocalDB) o
+`.\database\ejecutar.ps1 -Servidor localhost` (SQL Server Developer). Agregar `-Reiniciar`
+para borrar la base y crearla de cero.
+
+**Windows (SSMS), a mano:** abrir cada `.sql` en orden numérico y ejecutarlo (F5). Después,
 `pruebas/verificar_restricciones.sql`; al final debe decir `0 fallan`.
 
 **Linux con Docker:**

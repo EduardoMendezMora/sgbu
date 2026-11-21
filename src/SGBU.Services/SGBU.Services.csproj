@@ -9,4 +9,8 @@
     <ProjectReference Include="..\SGBU.Domain\SGBU.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+  </ItemGroup>
+
 </Project>

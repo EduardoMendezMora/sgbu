@@ -1,0 +1,33 @@
+<Window x:Class="SGBU.UI.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:SGBU.UI.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:LoginViewModel}"
+        Title="SGBU - Iniciar sesión"
+        Width="420" SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        FocusManager.FocusedElement="{Binding ElementName=CajaUsuario}">
+  <StackPanel Margin="32">
+    <TextBlock Text="SGBU" FontSize="32" FontWeight="Bold" Foreground="{StaticResource ColorPrincipal}" HorizontalAlignment="Center" />
+    <TextBlock Text="Sistema de Gestión de Biblioteca Universitaria" FontSize="13" Margin="0,4,0,24" HorizontalAlignment="Center" />
+
+    <TextBlock Text="Email o carné" Margin="0,0,0,4" />
+    <TextBox x:Name="CajaUsuario" Padding="6" FontSize="14"
+             Text="{Binding Usuario, UpdateSourceTrigger=PropertyChanged}" />
+
+    <TextBlock Text="Contraseña" Margin="0,16,0,4" />
+    <PasswordBox x:Name="CajaContrasena" Padding="6" FontSize="14" PasswordChanged="AlCambiarContrasena" />
+
+    <TextBlock Text="{Binding MensajeError}" Foreground="{StaticResource ColorError}" TextWrapping="Wrap" Margin="0,12,0,0"
+               Visibility="{Binding HayError, Converter={StaticResource BoolAVisibilidad}}" />
+
+    <Button Content="Iniciar sesión" IsDefault="True" Margin="0,24,0,0" Padding="8" FontSize="14"
+            Command="{Binding IniciarSesionCommand}" />
+    <ProgressBar IsIndeterminate="True" Height="4" Margin="0,8,0,0"
+                 Visibility="{Binding Ocupado, Converter={StaticResource BoolAVisibilidad}}" />
+  </StackPanel>
+</Window>

@@ -1,0 +1,29 @@
+<Window x:Class="SGBU.UI.Views.PrincipalWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:SGBU.UI.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:PrincipalViewModel}"
+        Title="SGBU - Sistema de Gestión de Biblioteca Universitaria"
+        Width="1000" Height="640"
+        WindowStartupLocation="CenterScreen">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Background="{StaticResource ColorPrincipal}" Padding="16,10">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Content="Cerrar sesión" Padding="10,4" Command="{Binding CerrarSesionCommand}" />
+        <StackPanel>
+          <TextBlock Text="{Binding Bienvenida}" Foreground="White" FontSize="16" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding Sesion.Rol}" Foreground="#D0DCEB" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <ListBox DockPanel.Dock="Left" Width="220" BorderThickness="0,0,1,0" Padding="0,8"
+             ItemsSource="{Binding Opciones}" SelectedItem="{Binding OpcionSeleccionada}"
+             DisplayMemberPath="Titulo" FontSize="14" />
+
+    <TextBlock Text="{Binding Contenido}" Margin="24" FontSize="16" TextWrapping="Wrap" />
+  </DockPanel>
+</Window>
