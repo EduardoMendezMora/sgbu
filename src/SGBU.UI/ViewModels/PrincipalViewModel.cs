@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SGBU.Services.Catalogo;
+using SGBU.Services.Multas;
 using SGBU.Services.Prestamos;
 using SGBU.Services.Seguridad;
 using SGBU.Services.Usuarios;
@@ -15,6 +16,7 @@ public partial class PrincipalViewModel : ObservableObject
     private readonly ServicioCatalogo servicioCatalogo;
     private readonly ServicioUsuarios servicioUsuarios;
     private readonly ServicioPrestamos servicioPrestamos;
+    private readonly ServicioMultas servicioMultas;
 
     [ObservableProperty]
     private OpcionMenu? opcionSeleccionada;
@@ -24,12 +26,13 @@ public partial class PrincipalViewModel : ObservableObject
     [ObservableProperty]
     private object? vistaActual;
 
-    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios, ServicioPrestamos servicioPrestamos)
+    public PrincipalViewModel(Sesion sesion, IServicioVentanas ventanas, ServicioCatalogo servicioCatalogo, ServicioUsuarios servicioUsuarios, ServicioPrestamos servicioPrestamos, ServicioMultas servicioMultas)
     {
         this.ventanas = ventanas;
         this.servicioCatalogo = servicioCatalogo;
         this.servicioUsuarios = servicioUsuarios;
         this.servicioPrestamos = servicioPrestamos;
+        this.servicioMultas = servicioMultas;
         Sesion = sesion;
         Bienvenida = "Bienvenido(a), " + sesion.NombreCompleto;
 
@@ -65,11 +68,15 @@ public partial class PrincipalViewModel : ObservableObject
         }
         else if (value.Permiso == Permiso.VerMisPrestamos)
         {
-            VistaActual = new MisPrestamosViewModel(servicioPrestamos, Sesion);
+            VistaActual = new MisPrestamosViewModel(servicioPrestamos, servicioMultas, Sesion);
         }
         else if (value.Permiso == Permiso.RegistrarPrestamos)
         {
             VistaActual = new PrestamosViewModel(servicioPrestamos, Sesion);
+        }
+        else if (value.Permiso == Permiso.GestionarMultas)
+        {
+            VistaActual = new MultasViewModel(servicioMultas, Sesion);
         }
         else if (value.Permiso == Permiso.GestionarUsuarios)
         {

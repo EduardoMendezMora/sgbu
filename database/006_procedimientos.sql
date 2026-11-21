@@ -179,3 +179,28 @@ BEGIN
     VALUES (@RegistradoPorId, N'RENOVACION', N'Prestamos', @PrestamoId);
 END
 GO
+
+/* ---------- Pagar una multa ----------
+   Al pagarla, el usuario puede volver a pedir préstamos (si no tiene otras pendientes). */
+CREATE OR ALTER PROCEDURE dbo.sp_PagarMulta
+    @MultaId         INT,
+    @RegistradoPorId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @estado NVARCHAR(10), @monto DECIMAL(10, 2);
+
+    SELECT @estado = Estado, @monto = Monto FROM dbo.Multas WHERE Id = @MultaId;
+
+    IF @estado IS NULL
+        THROW 50031, N'La multa no existe.', 1;
+    IF @estado = N'Pagada'
+        THROW 50032, N'La multa ya está pagada.', 1;
+
+    UPDATE dbo.Multas SET Estado = N'Pagada', FechaPago = SYSDATETIME() WHERE Id = @MultaId;
+
+    INSERT INTO dbo.Auditoria (UsuarioId, Accion, Entidad, EntidadId, Detalle)
+    VALUES (@RegistradoPorId, N'PAGO_MULTA', N'Multas', @MultaId, CONCAT(N'Pago de ₡', @monto));
+END
+GO
