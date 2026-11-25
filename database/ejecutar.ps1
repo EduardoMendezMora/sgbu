@@ -1,4 +1,4 @@
-<#
+﻿<#
     Crea (o actualiza) la base SGBU en Windows y corre las pruebas de la base.
 
     Uso, desde la carpeta del repositorio, en PowerShell:
@@ -15,19 +15,35 @@ param(
 
 $ErrorActionPreference = "Stop"
 $carpeta = $PSScriptRoot
+$servidorApp = $Servidor   # el que usa la aplicación (se muestra al final)
 
 if (-not (Get-Command sqlcmd -ErrorAction SilentlyContinue)) {
     throw "No se encontró sqlcmd. Instálelo con: winget install Microsoft.Sqlcmd"
 }
 
+# Hay dos sqlcmd: el clásico (ODBC, viene con SQL Server) y el nuevo de winget (go-sqlcmd).
+# El clásico necesita -f 65001 para leer UTF-8 (tildes y ₡); el nuevo ya lee UTF-8 y no acepta -f.
+$sqlcmdNuevo = (sqlcmd -? | Out-String) -like "*Install/Create/Query*"
+
 if ($Servidor -like "(localdb)*") {
     sqllocaldb start MSSQLLocalDB | Out-Null
+
+    # El sqlcmd nuevo no entiende "(localdb)": hay que darle la "tubería" (named pipe) de la instancia.
+    if ($sqlcmdNuevo) {
+        $pipe = (sqllocaldb info MSSQLLocalDB | Select-String "np:\\\S+").Matches.Value
+        if (-not $pipe) { throw "No se pudo leer la tubería de LocalDB (sqllocaldb info MSSQLLocalDB)" }
+        $Servidor = $pipe
+    }
 }
 
 function Ejecutar([string]$archivo) {
     Write-Host "== $(Split-Path $archivo -Leaf)"
-    # -b: detenerse si hay error · -I: QUOTED_IDENTIFIER (lo exigen los índices filtrados) · -f 65001: UTF-8 (tildes y ₡)
-    sqlcmd -S $Servidor -E -C -b -I -f 65001 -i $archivo
+    # -b: detenerse si hay error · -I: QUOTED_IDENTIFIER (lo exigen los índices filtrados)
+    if ($sqlcmdNuevo) {
+        sqlcmd -S $Servidor -E -C -b -I -i $archivo
+    } else {
+        sqlcmd -S $Servidor -E -C -b -I -f 65001 -i $archivo
+    }
     if ($LASTEXITCODE -ne 0) { throw "Falló $archivo" }
 }
 
@@ -42,4 +58,4 @@ Ejecutar (Join-Path $carpeta "pruebas\verificar_restricciones.sql")
 
 Write-Host ""
 Write-Host "Listo. Cadena de conexión para la aplicación:"
-Write-Host "  Server=$Servidor;Database=SGBU;Integrated Security=True;TrustServerCertificate=True"
+Write-Host "  Server=$servidorApp;Database=SGBU;Integrated Security=True;TrustServerCertificate=True"
