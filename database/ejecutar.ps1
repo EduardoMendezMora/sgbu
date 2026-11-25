@@ -24,10 +24,18 @@ if ($Servidor -like "(localdb)*") {
     sqllocaldb start MSSQLLocalDB | Out-Null
 }
 
+# Hay dos sqlcmd: el clásico (ODBC, viene con SQL Server) y el nuevo de winget (go-sqlcmd).
+# El clásico necesita -f 65001 para leer UTF-8 (tildes y ₡); el nuevo ya lee UTF-8 y no acepta -f.
+$sqlcmdNuevo = (sqlcmd -? | Out-String) -like "*Install/Create/Query*"
+
 function Ejecutar([string]$archivo) {
     Write-Host "== $(Split-Path $archivo -Leaf)"
-    # -b: detenerse si hay error · -I: QUOTED_IDENTIFIER (lo exigen los índices filtrados) · -f 65001: UTF-8 (tildes y ₡)
-    sqlcmd -S $Servidor -E -C -b -I -f 65001 -i $archivo
+    # -b: detenerse si hay error · -I: QUOTED_IDENTIFIER (lo exigen los índices filtrados)
+    if ($sqlcmdNuevo) {
+        sqlcmd -S $Servidor -E -C -b -I -i $archivo
+    } else {
+        sqlcmd -S $Servidor -E -C -b -I -f 65001 -i $archivo
+    }
     if ($LASTEXITCODE -ne 0) { throw "Falló $archivo" }
 }
 
