@@ -18,6 +18,8 @@ internal class FabricaFalsa : IFabricaUnidadDeTrabajo
 
     public List<int> UsuariosConMulta { get; } = new List<int>();
 
+    public List<Multa> Multas { get; } = new List<Multa>();
+
     public List<int> MaterialesReservados { get; } = new List<int>();
 
     public List<string> LlamadasProcedimientos { get; } = new List<string>();

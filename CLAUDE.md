@@ -108,7 +108,8 @@ dotnet run --project src/SGBU.UI      # solo en Windows
 - [x] 7. Préstamos y devoluciones con stored procedures (rama `feature/prestamos`;
       `006_procedimientos.sql`: sp_RegistrarPrestamo, sp_RegistrarDevolucion (genera la multa),
       sp_RenovarPrestamo; pantallas "Préstamos y devoluciones" y "Mis préstamos")
-- [ ] 8. Multas y pagos
+- [x] 8. Multas y pagos (rama `feature/multas`; sp_PagarMulta, pantalla "Multas" del
+      administrador y multas pendientes en "Mis préstamos")
 - [ ] 9. Reportes (PDF, Excel, gráficos) y respaldo XML
 - [ ] 10. Configuración (tema, idioma ES/EN) y auditoría
 - [ ] 11. Instalador (MSI o ClickOnce), manuales, diccionario de datos, CHANGELOG

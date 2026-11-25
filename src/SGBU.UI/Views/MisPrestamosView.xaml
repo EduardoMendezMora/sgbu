@@ -7,6 +7,9 @@
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <TextBlock Grid.Row="0" Text="Mis préstamos" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
@@ -27,5 +30,16 @@
             HorizontalAlignment="Left" Margin="0,8,0,0" Padding="10,2" />
 
     <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="DarkBlue" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+    <!-- Multas pendientes -->
+    <TextBlock Grid.Row="4" Text="Mis multas pendientes" FontSize="16" FontWeight="Bold" Margin="0,16,0,8" />
+    <DataGrid Grid.Row="5" ItemsSource="{Binding Multas}" AutoGenerateColumns="False" IsReadOnly="True" Height="120">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Material" Binding="{Binding Titulo}" Width="*" />
+        <DataGridTextColumn Header="Días de atraso" Binding="{Binding DiasAtraso}" Width="90" />
+        <DataGridTextColumn Header="Monto (₡)" Binding="{Binding Monto, StringFormat=N0}" Width="80" />
+      </DataGrid.Columns>
+    </DataGrid>
+    <TextBlock Grid.Row="6" Text="{Binding TotalMultas}" Foreground="Red" FontWeight="Bold" Margin="0,8,0,0" />
   </Grid>
 </UserControl>

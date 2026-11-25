@@ -9,7 +9,7 @@ Scripts SQL del proyecto, numerados en el orden en que se ejecutan.
 | `003_tabla_multas.sql` | Tabla Multas: una por préstamo atrasado, monto entre 0 y 2000 |
 | `004_indices.sql` | Índices para búsquedas y reportes |
 | `005_datos_iniciales.sql` | Datos de prueba |
-| `006_procedimientos.sql` | Stored procedures: prestar, devolver (genera la multa) y renovar |
+| `006_procedimientos.sql` | Stored procedures: prestar, devolver (genera la multa), renovar y pagar multa |
 | `pruebas/verificar_restricciones.sql` | Intenta guardar datos inválidos y comprueba que la base los rechaza |
 
 Todos los scripts se pueden ejecutar varias veces sin error ni datos duplicados.

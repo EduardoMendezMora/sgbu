@@ -53,19 +53,35 @@ try
     Thread.Sleep(3000);
     Foto(principal, "07_prestamo_registrado.png");
 
+    // Devolución atrasada de Daniela (EST-1004, fila 2): genera una multa.
+    SeleccionarFila(principal, 1);
+    principal.FindFirstDescendant(cf => cf.ByAutomationId("btnDevolver")).AsButton().Invoke();
+    Thread.Sleep(3000);
+    Foto(principal, "08_devolucion_con_multa.png");
+
+    ElegirMenu(principal, "Multas");
+    Thread.Sleep(3000);
+    Foto(principal, "09_multas.png");
+
+    // Paga la multa de Daniela (fila 2) y deja la de María pendiente.
+    SeleccionarFila(principal, 1);
+    principal.FindFirstDescendant(cf => cf.ByAutomationId("btnPagar")).AsButton().Invoke();
+    Thread.Sleep(3000);
+    Foto(principal, "10_multa_pagada.png");
+
     // 3. Estudiante: el menú tiene menos opciones y no hay formulario
     principal.FindFirstDescendant(cf => cf.ByAutomationId("btnCerrarSesion")).AsButton().Invoke();
     Thread.Sleep(2000);
     Window login2 = EsperarVentana("Iniciar sesión");
-    Entrar(login2, "EST-1001", "Sgbu2026!");
+    Entrar(login2, "EST-1002", "Sgbu2026!");
     Window principalEstudiante = EsperarVentana("Biblioteca Universitaria");
     principalEstudiante.Patterns.Window.Pattern.SetWindowVisualState(FlaUI.Core.Definitions.WindowVisualState.Maximized);
     Thread.Sleep(3000);
-    Foto(principalEstudiante, "08_catalogo_estudiante.png");
+    Foto(principalEstudiante, "11_catalogo_estudiante.png");
 
     ElegirMenu(principalEstudiante, "Mis préstamos");
     Thread.Sleep(3000);
-    Foto(principalEstudiante, "09_mis_prestamos.png");
+    Foto(principalEstudiante, "12_mis_prestamos_y_multas.png");
 
     Console.WriteLine("Capturas listas en " + carpeta);
 }
@@ -96,6 +112,13 @@ void Escribir(AutomationElement caja, string texto)
     Keyboard.TypeSimultaneously(VirtualKeyShort.CONTROL, VirtualKeyShort.KEY_A);
     Keyboard.Type(VirtualKeyShort.DELETE);
     Keyboard.Type(texto);
+}
+
+void SeleccionarFila(Window ventana, int fila)
+{
+    AutomationElement grilla = ventana.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.DataGrid));
+    grilla.AsGrid().Select(fila);
+    Thread.Sleep(500);
 }
 
 void ElegirMenu(Window ventana, string opcion)

@@ -227,6 +227,18 @@ END TRY BEGIN CATCH
     ELSE BEGIN SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp + N' (' + ERROR_MESSAGE() + N')'; END
 END CATCH
 
+SET @nombreSp = N'SP: pagar la multa desbloquea al usuario y no se puede pagar dos veces';
+DECLARE @multa INT = (SELECT Id FROM dbo.Multas WHERE UsuarioId = @est2 AND Estado = N'Pendiente');
+EXEC dbo.sp_PagarMulta @multa, @adm;
+BEGIN TRY
+    EXEC dbo.sp_PagarMulta @multa, @adm;
+    SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp;
+END TRY BEGIN CATCH
+    IF ERROR_NUMBER() = 50032 AND NOT EXISTS (SELECT 1 FROM dbo.Multas WHERE UsuarioId = @est2 AND Estado = N'Pendiente')
+    BEGIN SET @okSp += 1; PRINT N'ok    ' + @nombreSp; END
+    ELSE BEGIN SET @fallosSp += 1; PRINT N'FALLA: ' + @nombreSp + N' (' + ERROR_MESSAGE() + N')'; END
+END CATCH
+
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
 PRINT CONCAT(N'Procedimientos: ', @okSp, N' pasan, ', @fallosSp, N' fallan');

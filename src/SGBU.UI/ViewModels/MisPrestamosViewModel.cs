@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SGBU.Domain.Excepciones;
 using SGBU.Domain.Repositorios;
+using SGBU.Services.Multas;
 using SGBU.Services.Prestamos;
 using SGBU.Services.Seguridad;
 
@@ -12,7 +13,11 @@ namespace SGBU.UI.ViewModels;
 public partial class MisPrestamosViewModel : ObservableObject
 {
     private readonly ServicioPrestamos servicio;
+    private readonly ServicioMultas servicioMultas;
     private readonly Sesion sesion;
+
+    [ObservableProperty]
+    private string totalMultas = string.Empty;
 
     [ObservableProperty]
     private PrestamoDetalle? prestamoSeleccionado;
@@ -20,14 +25,17 @@ public partial class MisPrestamosViewModel : ObservableObject
     [ObservableProperty]
     private string mensaje = string.Empty;
 
-    public MisPrestamosViewModel(ServicioPrestamos servicio, Sesion sesion)
+    public MisPrestamosViewModel(ServicioPrestamos servicio, ServicioMultas servicioMultas, Sesion sesion)
     {
         this.servicio = servicio;
+        this.servicioMultas = servicioMultas;
         this.sesion = sesion;
         CargarCommand.Execute(null);
     }
 
     public ObservableCollection<PrestamoDetalle> Prestamos { get; } = new ObservableCollection<PrestamoDetalle>();
+
+    public ObservableCollection<MultaDetalle> Multas { get; } = new ObservableCollection<MultaDetalle>();
 
     [RelayCommand]
     private async Task Renovar()
@@ -69,6 +77,22 @@ public partial class MisPrestamosViewModel : ObservableObject
             if (lista.Count == 0)
             {
                 Mensaje = "No tiene préstamos activos.";
+            }
+
+            IReadOnlyList<MultaDetalle> multas = await servicioMultas.ListarMisMultasAsync(sesion);
+            Multas.Clear();
+            foreach (MultaDetalle multa in multas)
+            {
+                Multas.Add(multa);
+            }
+
+            if (multas.Count == 0)
+            {
+                TotalMultas = "No tiene multas pendientes.";
+            }
+            else
+            {
+                TotalMultas = "Debe ₡" + ServicioMultas.Total(multas).ToString("N0") + ". Mientras tenga multas no puede pedir préstamos.";
             }
         }
         catch (Exception)
