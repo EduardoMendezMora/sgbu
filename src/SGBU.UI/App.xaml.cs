@@ -4,6 +4,7 @@ using SGBU.Data;
 using SGBU.Services.Catalogo;
 using SGBU.Services.Multas;
 using SGBU.Services.Prestamos;
+using SGBU.Services.Reportes;
 using SGBU.Services.Seguridad;
 using SGBU.Services.Usuarios;
 using SGBU.UI.Navegacion;
@@ -39,8 +40,9 @@ public partial class App : Application
         ServicioUsuarios usuarios = new ServicioUsuarios(fabrica, hasher);
         ServicioPrestamos prestamos = new ServicioPrestamos(fabrica);
         ServicioMultas multas = new ServicioMultas(fabrica);
+        ServicioReportes reportes = new ServicioReportes(fabrica);
 
-        ServicioVentanas ventanas = new ServicioVentanas(autenticacion, catalogo, usuarios, prestamos, multas);
+        ServicioVentanas ventanas = new ServicioVentanas(autenticacion, catalogo, usuarios, prestamos, multas, reportes);
         ventanas.MostrarLogin();
     }
 }

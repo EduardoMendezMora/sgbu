@@ -110,7 +110,9 @@ dotnet run --project src/SGBU.UI      # solo en Windows
       sp_RenovarPrestamo; pantallas "Préstamos y devoluciones" y "Mis préstamos")
 - [x] 8. Multas y pagos (rama `feature/multas`; sp_PagarMulta, pantalla "Multas" del
       administrador y multas pendientes en "Mis préstamos")
-- [ ] 9. Reportes (PDF, Excel, gráficos) y respaldo XML
+- [x] 9. Reportes (PDF, Excel, gráficos) y respaldo XML (rama `feature/reportes`; consultas
+      con DataTable, Exportador con QuestPDF y EPPlus, gráfico de barras con LiveCharts2,
+      respaldo con DataSet.WriteXml sin contraseñas)
 - [ ] 10. Configuración (tema, idioma ES/EN) y auditoría
 - [ ] 11. Instalador (MSI o ClickOnce), manuales, diccionario de datos, CHANGELOG
 - [ ] 12. Exposición de 20 minutos

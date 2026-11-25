@@ -1,0 +1,36 @@
+<UserControl x:Class="SGBU.UI.Views.ReportesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="Visible" />
+  </UserControl.Resources>
+
+  <Grid Margin="10">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Elegir reporte y exportar -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+      <Label Content="Reporte:" />
+      <ComboBox x:Name="cmbReporte" ItemsSource="{Binding Reportes}" SelectedItem="{Binding ReporteSeleccionado}" Width="280" />
+      <Button Content="Exportar a PDF" Command="{Binding ExportarPdfCommand}" Margin="10,0,0,0" Padding="10,0" />
+      <Button Content="Exportar a Excel" Command="{Binding ExportarExcelCommand}" Margin="10,0,0,0" Padding="10,0" />
+      <Button Content="Respaldo XML" Command="{Binding RespaldarCommand}" Margin="30,0,0,0" Padding="10,0"
+              Visibility="{Binding PuedeRespaldar, Converter={StaticResource Visible}}" />
+    </StackPanel>
+
+    <!-- Tabla del reporte: las columnas salen solas del DataTable -->
+    <DataGrid Grid.Row="1" ItemsSource="{Binding Datos}" AutoGenerateColumns="True" IsReadOnly="True" />
+
+    <!-- Gráfico (solo para el Top 10) -->
+    <lvc:CartesianChart Grid.Row="2" Height="220" Margin="0,8,0,0" Series="{Binding Series}" XAxes="{Binding EjeX}" YAxes="{Binding EjeY}"
+                        Visibility="{Binding MostrarGrafico, Converter={StaticResource Visible}}" />
+
+    <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="DarkBlue" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
+  </Grid>
+</UserControl>

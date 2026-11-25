@@ -19,6 +19,8 @@ public interface IUnidadDeTrabajo : IAsyncDisposable
 
     IRepositorioAuditoria Auditoria { get; }
 
+    IRepositorioReportes Reportes { get; }
+
     Task ConfirmarAsync();
 
     Task RevertirAsync();

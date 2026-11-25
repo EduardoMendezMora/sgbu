@@ -23,6 +23,7 @@ public class UnidadDeTrabajoSql : IUnidadDeTrabajo
         Multas = new RepositorioMultas(conexion, transaccion);
         Reservas = new RepositorioReservas(conexion, transaccion);
         Auditoria = new RepositorioAuditoria(conexion, transaccion);
+        Reportes = new RepositorioReportes(conexion, transaccion);
     }
 
     public IRepositorioMateriales Materiales { get; }
@@ -36,6 +37,8 @@ public class UnidadDeTrabajoSql : IUnidadDeTrabajo
     public IRepositorioReservas Reservas { get; }
 
     public IRepositorioAuditoria Auditoria { get; }
+
+    public IRepositorioReportes Reportes { get; }
 
     // Abre la conexión y empieza la transacción.
     public static async Task<UnidadDeTrabajoSql> AbrirAsync(string cadenaConexion)

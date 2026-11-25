@@ -20,6 +20,9 @@
     <DataTemplate DataType="{x:Type vm:MultasViewModel}">
       <views:MultasView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ReportesViewModel}">
+      <views:ReportesView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:UsuariosViewModel}">
       <views:UsuariosView />
     </DataTemplate>
