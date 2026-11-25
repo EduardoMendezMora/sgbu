@@ -1,0 +1,10 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <!-- Arma SGBU-Instalador.msi con WiX. Se compila en Windows (GitHub Actions) después de
+       publicar la aplicación en la carpeta "publicar". -->
+  <PropertyGroup>
+    <OutputName>SGBU-Instalador</OutputName>
+    <Platform>x64</Platform>
+  </PropertyGroup>
+
+</Project>

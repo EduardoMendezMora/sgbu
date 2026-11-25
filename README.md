@@ -9,6 +9,16 @@ Sistema de Gestión de Biblioteca Universitaria. Proyecto Programado de Programa
   "Componentes individuales", **SQL Server Express LocalDB**
 - Opcional: SQL Server 2022 Developer y SSMS. Si no, alcanza con LocalDB.
 
+## Instalar (sin Visual Studio)
+
+1. Descargue `SGBU-Instalador.msi` de la versión **ultima** del repositorio
+   (pestaña *Releases* en GitHub) y ejecútelo.
+2. Cree la base de datos una vez. Necesita SQL Server Express LocalDB
+   (`winget install Microsoft.SQLServer.2022.Express` o el instalador de LocalDB) y sqlcmd
+   (`winget install Microsoft.Sqlcmd`). En PowerShell:
+   `& "C:\Program Files\SGBU\database\ejecutar.ps1"`
+3. Abra **SGBU - Biblioteca Universitaria** desde el menú Inicio.
+
 ## Cómo probarlo en Windows
 
 En PowerShell:
@@ -59,6 +69,7 @@ dotnet test tests/SGBU.Data.Tests     # integración contra la base (sin SGBU_CO
 | `tests/SGBU.Data.Tests` | Pruebas de integración contra SQL Server. |
 | `tools/SGBU.Capturas` | Toma fotos de las pantallas en GitHub Actions (FlaUI). |
 | `database` | Scripts SQL. |
+| `instalador` | Proyecto WiX que arma el instalador MSI. |
 | `docs` | Manuales y diagramas. |
 
 ## Flujo de trabajo con Git

@@ -116,7 +116,8 @@ dotnet run --project src/SGBU.UI      # solo en Windows
 - [x] 10. Configuración (tema, idioma ES/EN) y auditoría (rama `feature/configuracion-auditoria`;
       Temas/Claro|Oscuro.xaml, Idiomas/es|en.xaml con StaticResource, preferencias en
       %AppData%\SGBU\configuracion.json; pantalla Auditoría con filtros y paginación)
-- [ ] 11. Instalador (MSI o ClickOnce), manuales, diccionario de datos, CHANGELOG
+- [x] 11. Instalador (MSI o ClickOnce), manuales, diccionario de datos, CHANGELOG (rama
+      `feature/documentacion-instalador`; MSI con WiX en `instalador/`, docs en `docs/`)
 - [ ] 12. Exposición de 20 minutos
 
 Las pruebas xUnit se escriben junto con cada paso desde el 3 (meta: más de 80% de cobertura).
