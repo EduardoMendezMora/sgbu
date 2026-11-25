@@ -1,4 +1,4 @@
-<#
+﻿<#
     Crea (o actualiza) la base SGBU en Windows y corre las pruebas de la base.
 
     Uso, desde la carpeta del repositorio, en PowerShell:
