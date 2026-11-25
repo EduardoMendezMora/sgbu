@@ -256,7 +256,7 @@ public partial class CatalogoViewModel : ObservableObject
             }
 
             totalPaginas = Math.Max(1, resultado.TotalPaginas);
-            InfoPagina = "Página " + pagina + " de " + totalPaginas + " (" + resultado.Total + " materiales)";
+            InfoPagina = Textos.Texto("T_Pagina") + " " + pagina + " " + Textos.Texto("T_De") + " " + totalPaginas + " (" + resultado.Total + " " + Textos.Texto("T_Materiales") + ")";
         }
         catch (Exception)
         {

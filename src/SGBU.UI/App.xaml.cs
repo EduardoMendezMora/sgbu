@@ -1,7 +1,9 @@
 using System.Windows;
 using Microsoft.Extensions.Configuration;
 using SGBU.Data;
+using SGBU.Services.Auditoria;
 using SGBU.Services.Catalogo;
+using SGBU.Services.Configuracion;
 using SGBU.Services.Multas;
 using SGBU.Services.Prestamos;
 using SGBU.Services.Reportes;
@@ -32,17 +34,22 @@ public partial class App : Application
             return;
         }
 
+        // Tema e idioma guardados en esta computadora.
+        Apariencia.Aplicar(Preferencias.Cargar(Preferencias.RutaPorDefecto()));
+
         // Aquí se crean los objetos y se le pasa a cada uno lo que necesita.
         FabricaUnidadDeTrabajoSql fabrica = new FabricaUnidadDeTrabajoSql(cadena);
         HasherBCrypt hasher = new HasherBCrypt();
-        ServicioAutenticacion autenticacion = new ServicioAutenticacion(fabrica, hasher);
-        ServicioCatalogo catalogo = new ServicioCatalogo(fabrica);
-        ServicioUsuarios usuarios = new ServicioUsuarios(fabrica, hasher);
-        ServicioPrestamos prestamos = new ServicioPrestamos(fabrica);
-        ServicioMultas multas = new ServicioMultas(fabrica);
-        ServicioReportes reportes = new ServicioReportes(fabrica);
+        Servicios servicios = new Servicios(
+            new ServicioAutenticacion(fabrica, hasher),
+            new ServicioCatalogo(fabrica),
+            new ServicioUsuarios(fabrica, hasher),
+            new ServicioPrestamos(fabrica),
+            new ServicioMultas(fabrica),
+            new ServicioReportes(fabrica),
+            new ServicioAuditoria(fabrica));
 
-        ServicioVentanas ventanas = new ServicioVentanas(autenticacion, catalogo, usuarios, prestamos, multas, reportes);
+        ServicioVentanas ventanas = new ServicioVentanas(servicios);
         ventanas.MostrarLogin();
     }
 }

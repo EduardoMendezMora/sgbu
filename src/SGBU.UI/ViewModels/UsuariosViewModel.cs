@@ -194,7 +194,7 @@ public partial class UsuariosViewModel : ObservableObject
             }
 
             totalPaginas = Math.Max(1, resultado.TotalPaginas);
-            InfoPagina = "Página " + pagina + " de " + totalPaginas + " (" + resultado.Total + " usuarios)";
+            InfoPagina = Textos.Texto("T_Pagina") + " " + pagina + " " + Textos.Texto("T_De") + " " + totalPaginas + " (" + resultado.Total + " " + Textos.Texto("T_Usuarios") + ")";
         }
         catch (ExcepcionDominio ex)
         {

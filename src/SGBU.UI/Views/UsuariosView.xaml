@@ -14,57 +14,57 @@
 
     <!-- Búsqueda -->
     <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,8">
-      <Label Content="Buscar:" />
+      <Label Content="{StaticResource T_Buscar}" />
       <TextBox Text="{Binding TextoBuscar}" Width="220" />
-      <Button Content="Buscar" Command="{Binding BuscarCommand}" Margin="10,0,0,0" Padding="10,0" IsDefault="True" />
+      <Button Content="{StaticResource T_BotonBuscar}" Command="{Binding BuscarCommand}" Margin="10,0,0,0" Padding="10,0" IsDefault="True" />
     </StackPanel>
 
     <!-- Tabla de usuarios -->
     <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Usuarios}" SelectedItem="{Binding UsuarioSeleccionado}"
               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="Carné" Binding="{Binding Carne}" Width="75" />
-        <DataGridTextColumn Header="Nombre" Binding="{Binding NombreCompleto}" Width="*" />
-        <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*" />
-        <DataGridTextColumn Header="Rol" Binding="{Binding Rol.Nombre}" Width="100" />
-        <DataGridCheckBoxColumn Header="Activo" Binding="{Binding Activo, Mode=OneWay}" Width="50" />
+        <DataGridTextColumn Header="{StaticResource T_ColCarne}" Binding="{Binding Carne}" Width="75" />
+        <DataGridTextColumn Header="{StaticResource T_ColNombre}" Binding="{Binding NombreCompleto}" Width="*" />
+        <DataGridTextColumn Header="{StaticResource T_ColEmail}" Binding="{Binding Email}" Width="*" />
+        <DataGridTextColumn Header="{StaticResource T_ColRol}" Binding="{Binding Rol.Nombre}" Width="100" />
+        <DataGridCheckBoxColumn Header="{StaticResource T_Activo}" Binding="{Binding Activo, Mode=OneWay}" Width="50" />
       </DataGrid.Columns>
     </DataGrid>
 
     <!-- Paginación -->
     <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,8,0,0">
-      <Button Content="&lt; Anterior" Command="{Binding AnteriorCommand}" Padding="8,2" />
+      <Button Content="{StaticResource T_Anterior}" Command="{Binding AnteriorCommand}" Padding="8,2" />
       <TextBlock Text="{Binding InfoPagina}" Margin="10,0" VerticalAlignment="Center" />
-      <Button Content="Siguiente &gt;" Command="{Binding SiguienteCommand}" Padding="8,2" />
+      <Button Content="{StaticResource T_Siguiente}" Command="{Binding SiguienteCommand}" Padding="8,2" />
     </StackPanel>
 
     <!-- Formulario -->
-    <GroupBox Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Header="Usuario" Width="260" Margin="10,0,0,0">
+    <GroupBox Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Header="{StaticResource T_GrupoUsuario}" Width="260" Margin="10,0,0,0">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="5">
-          <Label Content="Carné:" />
+          <Label Content="{StaticResource T_Carne}" />
           <TextBox Text="{Binding Carne}" />
-          <Label Content="DNI (cédula o DIMEX):" />
+          <Label Content="{StaticResource T_Dni}" />
           <TextBox Text="{Binding Dni}" />
-          <Label Content="Nombre:" />
+          <Label Content="{StaticResource T_Nombre}" />
           <TextBox Text="{Binding Nombre}" />
-          <Label Content="Apellidos:" />
+          <Label Content="{StaticResource T_Apellidos}" />
           <TextBox Text="{Binding Apellidos}" />
-          <Label Content="Email:" />
+          <Label Content="{StaticResource T_Email}" />
           <TextBox Text="{Binding Email}" />
-          <Label Content="Teléfono:" />
+          <Label Content="{StaticResource T_Telefono}" />
           <TextBox Text="{Binding Telefono}" />
-          <Label Content="Rol:" />
+          <Label Content="{StaticResource T_Rol}" />
           <ComboBox ItemsSource="{Binding Roles}" DisplayMemberPath="Nombre" SelectedValuePath="Id" SelectedValue="{Binding RolId}" />
-          <Label Content="Contraseña (vacía = no cambiar):" />
+          <Label Content="{StaticResource T_ContrasenaNoCambiar}" />
           <PasswordBox x:Name="txtContrasena" PasswordChanged="Contrasena_Cambio" />
-          <CheckBox Content="Activo" IsChecked="{Binding Activo}" Margin="0,8,0,0" />
+          <CheckBox Content="{StaticResource T_Activo}" IsChecked="{Binding Activo}" Margin="0,8,0,0" />
 
           <TextBlock Text="{Binding Mensaje}" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0" />
 
           <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <Button Content="Nuevo" Command="{Binding NuevoCommand}" Width="80" Click="Limpiar_Click" />
-            <Button Content="Guardar" Command="{Binding GuardarCommand}" Width="80" Margin="10,0,0,0" />
+            <Button Content="{StaticResource T_Nuevo}" Command="{Binding NuevoCommand}" Width="80" Click="Limpiar_Click" />
+            <Button Content="{StaticResource T_Guardar}" Command="{Binding GuardarCommand}" Width="80" Margin="10,0,0,0" />
           </StackPanel>
         </StackPanel>
       </ScrollViewer>

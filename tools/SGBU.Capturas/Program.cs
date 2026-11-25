@@ -81,6 +81,10 @@ try
     Thread.Sleep(3000);
     Foto(principal, "13_reporte_stock_critico.png");
 
+    ElegirMenu(principal, "Auditoría");
+    Thread.Sleep(3000);
+    Foto(principal, "14_auditoria.png");
+
     // 3. Estudiante: el menú tiene menos opciones y no hay formulario
     principal.FindFirstDescendant(cf => cf.ByAutomationId("btnCerrarSesion")).AsButton().Invoke();
     Thread.Sleep(2000);
@@ -89,11 +93,24 @@ try
     Window principalEstudiante = EsperarVentana("Biblioteca Universitaria");
     principalEstudiante.Patterns.Window.Pattern.SetWindowVisualState(FlaUI.Core.Definitions.WindowVisualState.Maximized);
     Thread.Sleep(3000);
-    Foto(principalEstudiante, "14_catalogo_estudiante.png");
+    Foto(principalEstudiante, "15_catalogo_estudiante.png");
 
     ElegirMenu(principalEstudiante, "Mis préstamos");
     Thread.Sleep(3000);
-    Foto(principalEstudiante, "15_mis_prestamos_y_multas.png");
+    Foto(principalEstudiante, "16_mis_prestamos_y_multas.png");
+
+    // 4. Configuración: tema oscuro e inglés. La ventana se vuelve a abrir con los cambios.
+    ElegirMenu(principalEstudiante, "Configuración");
+    Thread.Sleep(2000);
+    Foto(principalEstudiante, "17_configuracion.png");
+    principalEstudiante.FindFirstDescendant(cf => cf.ByAutomationId("cmbTema")).AsComboBox().Select(1);
+    principalEstudiante.FindFirstDescendant(cf => cf.ByAutomationId("cmbIdioma")).AsComboBox().Select(1);
+    principalEstudiante.FindFirstDescendant(cf => cf.ByAutomationId("btnAplicar")).AsButton().Invoke();
+    Thread.Sleep(3000);
+    Window enIngles = EsperarVentana("University Library");
+    enIngles.Patterns.Window.Pattern.SetWindowVisualState(FlaUI.Core.Definitions.WindowVisualState.Maximized);
+    Thread.Sleep(3000);
+    Foto(enIngles, "18_tema_oscuro_ingles.png");
 
     Console.WriteLine("Capturas listas en " + carpeta);
 }

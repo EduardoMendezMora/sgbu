@@ -11,30 +11,30 @@
 
     <!-- Búsqueda -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-      <Label Content="Multas pendientes. Buscar usuario:" />
+      <Label Content="{StaticResource T_MultasBuscar}" />
       <TextBox Text="{Binding TextoBuscar}" Width="200" />
-      <Button Content="Buscar" Command="{Binding BuscarCommand}" Margin="10,0,0,0" Padding="10,0" />
+      <Button Content="{StaticResource T_BotonBuscar}" Command="{Binding BuscarCommand}" Margin="10,0,0,0" Padding="10,0" />
     </StackPanel>
 
     <!-- Tabla -->
     <DataGrid x:Name="tablaMultas" Grid.Row="1" ItemsSource="{Binding Multas}" SelectedItem="{Binding MultaSeleccionada}"
               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="Carné" Binding="{Binding Carne}" Width="75" />
-        <DataGridTextColumn Header="Usuario" Binding="{Binding Usuario}" Width="*" />
-        <DataGridTextColumn Header="Material" Binding="{Binding Titulo}" Width="*" />
-        <DataGridTextColumn Header="Días de atraso" Binding="{Binding DiasAtraso}" Width="90" />
-        <DataGridTextColumn Header="Monto (₡)" Binding="{Binding Monto, StringFormat=N0}" Width="80" />
-        <DataGridTextColumn Header="Fecha" Binding="{Binding FechaGeneracion, StringFormat=dd/MM/yyyy}" Width="80" />
+        <DataGridTextColumn Header="{StaticResource T_ColCarne}" Binding="{Binding Carne}" Width="75" />
+        <DataGridTextColumn Header="{StaticResource T_GrupoUsuario}" Binding="{Binding Usuario}" Width="*" />
+        <DataGridTextColumn Header="{StaticResource T_GrupoMaterial}" Binding="{Binding Titulo}" Width="*" />
+        <DataGridTextColumn Header="{StaticResource T_ColDiasAtraso}" Binding="{Binding DiasAtraso}" Width="90" />
+        <DataGridTextColumn Header="{StaticResource T_ColMonto}" Binding="{Binding Monto, StringFormat=N0}" Width="80" />
+        <DataGridTextColumn Header="{StaticResource T_ColFecha}" Binding="{Binding FechaGeneracion, StringFormat=dd/MM/yyyy}" Width="80" />
       </DataGrid.Columns>
     </DataGrid>
 
     <!-- Total y pago -->
     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
-      <Button x:Name="btnPagar" Content="Registrar pago" Command="{Binding PagarCommand}" Padding="10,2" />
+      <Button x:Name="btnPagar" Content="{StaticResource T_RegistrarPago}" Command="{Binding PagarCommand}" Padding="10,2" />
       <TextBlock Text="{Binding Total}" FontWeight="Bold" VerticalAlignment="Center" Margin="15,0,0,0" />
     </StackPanel>
 
-    <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="DarkBlue" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
+    <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="{StaticResource ColorMensaje}" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
   </Grid>
 </UserControl>

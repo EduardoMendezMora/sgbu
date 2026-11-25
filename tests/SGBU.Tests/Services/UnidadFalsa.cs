@@ -16,7 +16,7 @@ internal class UnidadFalsa : IUnidadDeTrabajo
         Prestamos = new PrestamosFalsos(fabrica);
         Multas = new MultasFalsas(fabrica);
         Reservas = new ReservasFalsas(fabrica);
-        Auditoria = new AuditoriaFalsa(pendientes);
+        Auditoria = new AuditoriaFalsa(pendientes, fabrica.Auditoria);
     }
 
     public IRepositorioMateriales Materiales { get; }

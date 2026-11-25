@@ -12,32 +12,32 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <TextBlock Grid.Row="0" Text="Mis préstamos" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
+    <TextBlock Grid.Row="0" Text="{StaticResource T_Menu_MisPrestamos}" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
 
     <DataGrid Grid.Row="1" ItemsSource="{Binding Prestamos}" SelectedItem="{Binding PrestamoSeleccionado}"
               AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="Título" Binding="{Binding Titulo}" Width="*" />
-        <DataGridTextColumn Header="ISBN" Binding="{Binding Isbn}" Width="110" />
-        <DataGridTextColumn Header="Prestado" Binding="{Binding FechaPrestamo, StringFormat=dd/MM/yyyy}" Width="80" />
-        <DataGridTextColumn Header="Vence" Binding="{Binding FechaVencimiento, StringFormat=dd/MM/yyyy}" Width="80" />
-        <DataGridCheckBoxColumn Header="Renovado" Binding="{Binding Renovado, Mode=OneWay}" Width="65" />
-        <DataGridTextColumn Header="Días de atraso" Binding="{Binding DiasAtraso}" Width="90" />
+        <DataGridTextColumn Header="{StaticResource T_ColTitulo}" Binding="{Binding Titulo}" Width="*" />
+        <DataGridTextColumn Header="{StaticResource T_ColIsbn}" Binding="{Binding Isbn}" Width="110" />
+        <DataGridTextColumn Header="{StaticResource T_ColPrestado}" Binding="{Binding FechaPrestamo, StringFormat=dd/MM/yyyy}" Width="80" />
+        <DataGridTextColumn Header="{StaticResource T_ColVence}" Binding="{Binding FechaVencimiento, StringFormat=dd/MM/yyyy}" Width="80" />
+        <DataGridCheckBoxColumn Header="{StaticResource T_ColRenovado}" Binding="{Binding Renovado, Mode=OneWay}" Width="65" />
+        <DataGridTextColumn Header="{StaticResource T_ColDiasAtraso}" Binding="{Binding DiasAtraso}" Width="90" />
       </DataGrid.Columns>
     </DataGrid>
 
-    <Button Grid.Row="2" Content="Renovar el préstamo seleccionado" Command="{Binding RenovarCommand}"
+    <Button Grid.Row="2" Content="{StaticResource T_RenovarSeleccionado}" Command="{Binding RenovarCommand}"
             HorizontalAlignment="Left" Margin="0,8,0,0" Padding="10,2" />
 
-    <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="DarkBlue" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
+    <TextBlock Grid.Row="3" Text="{Binding Mensaje}" Foreground="{StaticResource ColorMensaje}" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
 
     <!-- Multas pendientes -->
-    <TextBlock Grid.Row="4" Text="Mis multas pendientes" FontSize="16" FontWeight="Bold" Margin="0,16,0,8" />
+    <TextBlock Grid.Row="4" Text="{StaticResource T_MisMultas}" FontSize="16" FontWeight="Bold" Margin="0,16,0,8" />
     <DataGrid Grid.Row="5" ItemsSource="{Binding Multas}" AutoGenerateColumns="False" IsReadOnly="True" Height="120">
       <DataGrid.Columns>
-        <DataGridTextColumn Header="Material" Binding="{Binding Titulo}" Width="*" />
-        <DataGridTextColumn Header="Días de atraso" Binding="{Binding DiasAtraso}" Width="90" />
-        <DataGridTextColumn Header="Monto (₡)" Binding="{Binding Monto, StringFormat=N0}" Width="80" />
+        <DataGridTextColumn Header="{StaticResource T_GrupoMaterial}" Binding="{Binding Titulo}" Width="*" />
+        <DataGridTextColumn Header="{StaticResource T_ColDiasAtraso}" Binding="{Binding DiasAtraso}" Width="90" />
+        <DataGridTextColumn Header="{StaticResource T_ColMonto}" Binding="{Binding Monto, StringFormat=N0}" Width="80" />
       </DataGrid.Columns>
     </DataGrid>
     <TextBlock Grid.Row="6" Text="{Binding TotalMultas}" Foreground="Red" FontWeight="Bold" Margin="0,8,0,0" />
