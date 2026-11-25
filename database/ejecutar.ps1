@@ -15,18 +15,26 @@ param(
 
 $ErrorActionPreference = "Stop"
 $carpeta = $PSScriptRoot
+$servidorApp = $Servidor   # el que usa la aplicación (se muestra al final)
 
 if (-not (Get-Command sqlcmd -ErrorAction SilentlyContinue)) {
     throw "No se encontró sqlcmd. Instálelo con: winget install Microsoft.Sqlcmd"
 }
 
-if ($Servidor -like "(localdb)*") {
-    sqllocaldb start MSSQLLocalDB | Out-Null
-}
-
 # Hay dos sqlcmd: el clásico (ODBC, viene con SQL Server) y el nuevo de winget (go-sqlcmd).
 # El clásico necesita -f 65001 para leer UTF-8 (tildes y ₡); el nuevo ya lee UTF-8 y no acepta -f.
 $sqlcmdNuevo = (sqlcmd -? | Out-String) -like "*Install/Create/Query*"
+
+if ($Servidor -like "(localdb)*") {
+    sqllocaldb start MSSQLLocalDB | Out-Null
+
+    # El sqlcmd nuevo no entiende "(localdb)": hay que darle la "tubería" (named pipe) de la instancia.
+    if ($sqlcmdNuevo) {
+        $pipe = (sqllocaldb info MSSQLLocalDB | Select-String "np:\\\S+").Matches.Value
+        if (-not $pipe) { throw "No se pudo leer la tubería de LocalDB (sqllocaldb info MSSQLLocalDB)" }
+        $Servidor = $pipe
+    }
+}
 
 function Ejecutar([string]$archivo) {
     Write-Host "== $(Split-Path $archivo -Leaf)"
@@ -50,4 +58,4 @@ Ejecutar (Join-Path $carpeta "pruebas\verificar_restricciones.sql")
 
 Write-Host ""
 Write-Host "Listo. Cadena de conexión para la aplicación:"
-Write-Host "  Server=$Servidor;Database=SGBU;Integrated Security=True;TrustServerCertificate=True"
+Write-Host "  Server=$servidorApp;Database=SGBU;Integrated Security=True;TrustServerCertificate=True"
