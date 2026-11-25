@@ -79,3 +79,52 @@ dotnet test tests/SGBU.Data.Tests     # integración contra la base (sin SGBU_CO
 - `feature/<nombre>`: una rama por tarea, que entra a `develop` mediante Pull Request.
 
 Cada Pull Request se compila y se prueba automáticamente en GitHub Actions.
+
+## Objetivo del sistema
+
+El Sistema de Gestión de Biblioteca Universitaria (SGBU)
+tiene como objetivo facilitar la administración de los
+recursos bibliotecarios mediante una aplicación de
+escritorio que permita organizar la información y
+controlar el acceso de los usuarios según su rol.
+
+## Tecnologías utilizadas
+
+- C# y .NET 10: desarrollo de la aplicación.
+- WPF: diseño de la interfaz gráfica.
+- MVVM: organización de la interfaz y su lógica.
+- SQL Server: almacenamiento de la información.
+- ADO.NET: conexión con la base de datos.
+- WiX: creación del instalador MSI.
+- Git y GitHub: control de versiones y trabajo colaborativo.
+- GitHub Actions: automatización de compilaciones y pruebas.
+
+## Documentación del proyecto
+
+La documentación complementaria se encuentra disponible
+en las siguientes carpetas y archivos:
+
+- [Manuales y diagramas](docs/)
+- [Base de datos](database/)
+- [Información de la base de datos](database/README.md)
+- [Instalador](instalador/)
+- [Historial de cambios](CHANGELOG.md)
+
+## Solución de problemas frecuentes
+
+- Si la aplicación no inicia, verificar que se encuentre
+  instalado el entorno de ejecución de .NET requerido.
+- Si existe un error de conexión, comprobar que SQL Server
+  o LocalDB esté disponible.
+- Si no se puede iniciar sesión, verificar que se hayan
+  ejecutado los scripts de creación de la base de datos
+  y que las credenciales sean correctas.
+- Si las pruebas de integración se omiten, revisar la
+  configuración de la variable SGBU_CONN.
+
+## Recomendaciones de seguridad
+
+Las credenciales proporcionadas son para pruebas.
+No deben utilizarse como credenciales de producción.
+Se recomienda mantener las configuraciones locales
+y los datos sensibles fuera del repositorio.
